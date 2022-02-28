@@ -174,6 +174,11 @@ class Permission(object):
     # Role interface by graphql
     def login_graphql(self, **params):
         try:
+            channel = params.get("endpoint_id")
+
+            if not channel:
+                raise Exception("Unrecognized request origin", 401)
+
             schema = Schema(
                 query=CertificateQuery,
                 types=certificate_type_class(),
@@ -182,7 +187,12 @@ class Permission(object):
                 "logger": self.logger,
                 "setting": self.setting,
                 "context": params.get("context"),
+                "channel": str(channel).strip(),
             }
+            print(
+                "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+                params.get("context"),
+            )
             variables = params.get("variables", {})
             operations = params.get("query")
             response = {
