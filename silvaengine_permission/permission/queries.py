@@ -14,7 +14,8 @@ from .types import (
     SimilarUsersType,
     RoleDetectionType,
 )
-from .models import RelationshipModel, RoleModel, RoleType
+from .models import RelationshipModel, RoleModel
+from .enumerations import RoleType
 from .handlers import get_user_permissions
 import boto3, os, hmac, hashlib, base64, json
 
