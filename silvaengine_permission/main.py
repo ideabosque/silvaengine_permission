@@ -24,7 +24,7 @@ from .permission.handlers import (
     delete_relationships_by_condition,
     check_user_permissions,
 )
-from .permission.models import RoleRelationshipType
+from .permission.enumerations import RoleRelationshipType
 
 # Hook function applied to deployment
 def deploy() -> list:
