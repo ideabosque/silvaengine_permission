@@ -7,7 +7,7 @@ __all__ = [
     "types",
     "models",
 ]
-from .main import Auth, deploy
+from .main import Permission, deploy
 from .permission.types import *
 from .permission.models import (
     RoleModel,

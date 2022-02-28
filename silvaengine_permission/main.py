@@ -16,6 +16,7 @@ from .permission.schema import (
     certificate_type_class,
 )
 from .permission.handlers import (
+    get_roles,
     get_roles_by_cognito_user_sub,
     get_users_by_role_type,
     create_relationship_handler,
@@ -218,6 +219,15 @@ class Permission(object):
             return Utility.json_dumps(response)
         except Exception as e:
             raise e
+
+    # Implementation of hook configuration `permission_check_hooks`.
+    def permission_check_callback(self, user_id, channel, is_admin, group_id):
+        return get_roles(
+            user_id=user_id,
+            channel=channel,
+            is_admin=is_admin,
+            group_id=group_id,
+        )
 
     # Get roles
     def get_roles_by_cognito_user_sub(

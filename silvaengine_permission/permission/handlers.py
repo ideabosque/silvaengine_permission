@@ -311,6 +311,40 @@ def save_relationships_handler(info, relationships):
         raise e
 
 
+def get_roles(user_id, channel, is_admin, group_id):
+    try:
+        if not user_id:
+            raise Exception("Invalid user ID.", 403)
+        elif not channel:
+            raise Exception("Unrecognized request origin", 401)
+
+        # Check user's permissions
+        filter_conditions = (RelationshipModel.user_id == str(user_id).strip()) & (
+            RelationshipModel.apply_to == str(channel).strip()
+        )
+
+        if not is_admin and group_id:
+            filter_conditions = filter_conditions & (
+                RelationshipModel.group_id == group_id
+            )
+
+        role_ids = list(
+            set(
+                [
+                    str(relationship.role_id).strip()
+                    for relationship in RelationshipModel.scan(filter_conditions)
+                ]
+            )
+        )
+
+        if len(role_ids) < 1:
+            raise Exception("The current user is not assigned any role", 403)
+
+        return [role for role in RoleModel.scan(RoleModel.role_id.is_in(*role_ids))]
+    except Exception as e:
+        raise e
+
+
 # Get a list of resource permissions for a specified user
 def get_user_permissions(authorizer, channel):
     try:
