@@ -1,4 +1,4 @@
-# silvaengine_auth
+# Silva Engine Permission
 
 ## Configurations
 
@@ -12,7 +12,7 @@ app_client_id=abc123456789,abc123456789,...
 # The `custom_context_hooks` is optional
 custom_context_hooks=module_name:class_name:function_name,module_name:class_name:function_name,...
 
-# 2. Settings of silvaengine_auth
+# 2. Settings of silvaengine_permission
 app_client_id=abc123456789
 app_client_secret=abc123456789
 # The `custom_signin_hooks` is optional

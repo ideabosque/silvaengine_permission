@@ -15,7 +15,7 @@ import logging, sys, unittest, uuid, os
 load_dotenv()
 sys.path.insert(0, path.dirname(path.dirname(path.dirname(path.realpath(__file__)))))
 
-from silvaengine_auth import Auth, RoleRelationshipType
+from silvaengine_permission import Permission, RoleRelationshipType
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
@@ -31,7 +31,7 @@ setting = {
 
 class SilvaEngineAuthTest(unittest.TestCase):
     def setUp(self):
-        self.auth = Auth(logger, **setting)
+        self.instance = Permission(logger, **setting)
         logger.info("Initiate SilvaEngineAuthTest ...")
 
     def tearDown(self):
@@ -93,7 +93,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
             # "name": None,
         }
         payload = {"query": query, "variables": variables}
-        response = self.auth.role_graphql(**payload)
+        response = self.instance.role_graphql(**payload)
         logger.info(response)
 
     @unittest.skip("demonstrating skipping")
@@ -125,7 +125,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
             "roleId": "7774efc2-0a6e-11ec-9dc1-0242ac120002",
         }
         payload = {"query": query, "variables": variables}
-        response = self.auth.role_graphql(**payload)
+        response = self.instance.role_graphql(**payload)
         logger.info(response)
 
     @unittest.skip("demonstrating skipping")
@@ -140,7 +140,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
         # variables = {"name": "GWI Account Manager"}
         variables = {}
         payload = {"query": query, "variables": variables}
-        response = self.auth.role_graphql(**payload)
+        response = self.instance.role_graphql(**payload)
         logger.info(response)
 
     @unittest.skip("demonstrating skipping")
@@ -199,7 +199,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
             "relationshipType": 3,
         }
         payload = {"query": query, "variables": variables}
-        response = self.auth.role_graphql(**payload)
+        response = self.instance.role_graphql(**payload)
         logger.info(response)
 
     @unittest.skip("demonstrating skipping")
@@ -272,7 +272,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
         }
 
         payload = {"mutation": mutation, "variables": variables}
-        response = self.auth.role_graphql(**payload)
+        response = self.instance.role_graphql(**payload)
         logger.info(response)
 
     @unittest.skip("demonstrating skipping")
@@ -344,7 +344,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
             "description": "GWI QC Manager 123",
         }
         payload = {"mutation": mutation, "variables": variables}
-        response = self.auth.role_graphql(**payload)
+        response = self.instance.role_graphql(**payload)
         logger.info(response)
 
     @unittest.skip("demonstrating skipping")
@@ -360,7 +360,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
             "roleId": "bae6a6a2-0a6d-11ec-8d90-0242ac120002",
         }
         payload = {"mutation": mutation, "variables": variables}
-        response = self.auth.role_graphql(**payload)
+        response = self.instance.role_graphql(**payload)
         logger.info(response)
 
     @unittest.skip("demonstrating skipping")
@@ -399,7 +399,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
             "status": True,
         }
         payload = {"mutation": mutation, "variables": variables}
-        response = self.auth.role_graphql(**payload)
+        response = self.instance.role_graphql(**payload)
         logger.info(response)
 
     @unittest.skip("demonstrating skipping")
@@ -438,7 +438,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
         }
 
         payload = {"mutation": mutation, "variables": variables}
-        response = self.auth.role_graphql(**payload)
+        response = self.instance.role_graphql(**payload)
         logger.info(response)
 
     @unittest.skip("demonstrating skipping")
@@ -459,7 +459,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
             "relationshipId": "a00bb2ac-0a70-11ec-8c56-0242ac120002",
         }
         payload = {"mutation": mutation, "variables": variables}
-        response = self.auth.role_graphql(**payload)
+        response = self.instance.role_graphql(**payload)
         logger.info(response)
 
     @unittest.skip("demonstrating skipping")
@@ -492,7 +492,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
             ]
         }
         payload = {"mutation": mutation, "variables": variables}
-        response = self.auth.role_graphql(**payload)
+        response = self.instance.role_graphql(**payload)
         logger.info(response)
 
     @unittest.skip("demonstrating skipping")
@@ -520,7 +520,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
             "password": os.getenv("test_user_password"),
         }
         payload = {"query": query, "variables": variables}
-        response = self.auth.login_graphql(**payload)
+        response = self.instance.login_graphql(**payload)
         print(response)
         print("##############")
 
@@ -662,7 +662,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
             },
         }
 
-        response = self.auth.authorize(request, None)
+        response = self.instance.authorize(request, None)
         print("Response:", response)
 
     @unittest.skip("demonstrating skipping")
@@ -806,33 +806,33 @@ class SilvaEngineAuthTest(unittest.TestCase):
                 "function": "data_engine_graphql",
             },
         }
-        response = self.auth.verify_permission(request, None)
+        response = self.instance.verify_permission(request, None)
         print("Response:", response)
 
     @unittest.skip("demonstrating skipping")
     def test_get_roles(self):
-        response = self.auth.get_roles_by_cognito_user_sub(
+        response = self.instance.get_roles_by_cognito_user_sub(
             "f2b3a074-eb9e-4210-81b2-cbe617ecc50b"
         )
         print("Response:", response)
 
     @unittest.skip("demonstrating skipping")
     def test_get_users(self):
-        response = self.auth.get_users_by_role_type(
+        response = self.instance.get_users_by_role_type(
             role_types=[2], relationship_type=1, ids=[2018]
         )
         print("Response:", response)
 
     @unittest.skip("demonstrating skipping")
     def test_get_roles_by_specific_user(self):
-        response = self.auth.get_roles_by_specific_user(
+        response = self.instance.get_roles_by_specific_user(
             1906, RoleRelationshipType.SELLER.value
         )
         print("test_get_roles_by_specific_user:::::", response)
 
     @unittest.skip("demonstrating skipping")
     def test_check_user_permissions(self):
-        response = self.auth.check_user_permissions(
+        response = self.instance.check_user_permissions(
             "crm_engine",
             "CRMEngine",
             "crm_graphql",
