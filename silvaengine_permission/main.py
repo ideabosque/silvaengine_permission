@@ -88,7 +88,7 @@ def deploy() -> list:
                     "support_methods": ["POST"],
                     "is_auth_required": True,
                     "is_graphql": True,
-                    "settings": "product_engine_graphql",
+                    "settings": "beta_core_api",
                 },
                 "login_graphql": {
                     "is_static": False,
@@ -105,7 +105,7 @@ def deploy() -> list:
                     "is_auth_required": False,
                     "is_graphql": True,
                     "disabled_in_resources": True,
-                    "settings": "product_engine_graphql",
+                    "settings": "beta_core_api",
                 },
             },
         }
