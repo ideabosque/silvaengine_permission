@@ -88,6 +88,7 @@ def deploy() -> list:
                     "support_methods": ["POST"],
                     "is_auth_required": True,
                     "is_graphql": True,
+                    "settings": "product_engine_graphql",
                 },
                 "login_graphql": {
                     "is_static": False,
@@ -104,6 +105,7 @@ def deploy() -> list:
                     "is_auth_required": False,
                     "is_graphql": True,
                     "disabled_in_resources": True,
+                    "settings": "product_engine_graphql",
                 },
             },
         }
@@ -189,10 +191,6 @@ class Permission(object):
                 "context": params.get("context"),
                 "channel": str(channel).strip(),
             }
-            print(
-                "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-                params.get("context"),
-            )
             variables = params.get("variables", {})
             operations = params.get("query")
             response = {
