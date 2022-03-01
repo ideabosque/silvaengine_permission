@@ -298,68 +298,115 @@ def resolve_users(info, **kwargs):
         if results.total_count < 1:
             return None
 
-        hooks = (
-            [
-                hook.strip()
-                for hook in info.context.get("setting", {})
-                .get("custom_hooks", "")
-                .split(",")
-            ]
-            if info.context.get("setting", {}).get("custom_hooks")
-            else []
+        fn = Utility.import_dynamically(
+            module_name="relation_engine",
+            function_name="get_users_by_cognito_user_id",
+            class_name="RelationEngine",
+            constructor_parameters={"logger": info.context.get("logger")},
         )
 
-        if len(hooks):
-            logger = info.context.get("logger")
-
-            for hook in hooks:
-                fragments = hook.split(":", 3)
-
-                if len(fragments) < 3:
-                    for i in (0, 3 - len(fragments)):
-                        fragments.append(None)
-                elif len(fragments) > 3:
-                    fragments = fragments[0:3]
-
-                module_name, class_name, function_name = fragments
-                fn = Utility.import_dynamically(
-                    module_name, function_name, class_name, {"logger": logger}
+        if callable(fn):
+            users = fn(
+                list(
+                    set(
+                        [
+                            str(relationship.user_id).strip()
+                            for relationship in relationships
+                        ]
+                    )
                 )
+            )
 
-                if fn is None:
-                    continue
+            if len(users):
+                for relationship in relationships:
+                    user_ids = list(
+                        set(
+                            [
+                                # user.cognito_user_sub
+                                str(user["id"])
+                                for user in roles[
+                                    str(relationship.role_id).strip()
+                                ].users
+                                # if hasattr(user, "cognito_user_sub")
+                                if ("id" in user)
+                            ]
+                        )
+                    )
 
-                users = fn(
-                    list(set([relationship.user_id for relationship in relationships]))
-                )
+                    if (
+                        relationship.role_id
+                        and roles.get(str(relationship.role_id).strip())
+                        and relationship.user_id
+                        and users.get(str(relationship.user_id).strip())
+                        and str(relationship.user_id).strip() not in user_ids
+                    ):
 
-                if len(users):
-                    for relationship in relationships:
-                        user_ids = list(
-                            set(
-                                [
-                                    # user.cognito_user_sub
-                                    str(user["id"])
-                                    for user in roles[
-                                        str(relationship.role_id).strip()
-                                    ].users
-                                    # if hasattr(user, "cognito_user_sub")
-                                    if ("id" in user)
-                                ]
-                            )
+                        roles[str(relationship.role_id).strip()].users.append(
+                            users.get(str(relationship.user_id).strip())
                         )
 
-                        if (
-                            relationship.role_id
-                            and roles.get(str(relationship.role_id).strip())
-                            and relationship.user_id
-                            and users.get(str(relationship.user_id).strip())
-                            and str(relationship.user_id).strip() not in user_ids
-                        ):
+        # hooks = (
+        #     [
+        #         hook.strip()
+        #         for hook in info.context.get("setting", {})
+        #         .get("custom_hooks", "")
+        #         .split(",")
+        #     ]
+        #     if info.context.get("setting", {}).get("custom_hooks")
+        #     else []
+        # )
 
-                            roles[str(relationship.role_id).strip()].users.append(
-                                users.get(str(relationship.user_id).strip())
-                            )
+        # if len(hooks):
+        #     logger = info.context.get("logger")
+
+        #     for hook in hooks:
+        #         fragments = hook.split(":", 3)
+
+        #         if len(fragments) < 3:
+        #             for i in (0, 3 - len(fragments)):
+        #                 fragments.append(None)
+        #         elif len(fragments) > 3:
+        #             fragments = fragments[0:3]
+
+        #         module_name, class_name, function_name = fragments
+        #         fn = Utility.import_dynamically(
+        #             module_name, function_name, class_name, {"logger": logger}
+        #         )
+
+        #         if fn is None:
+        #             continue
+
+        #         users = fn(
+        #             list(set([relationship.user_id for relationship in relationships]))
+        #         )
+
+        #         if len(users):
+        #             for relationship in relationships:
+        #                 user_ids = list(
+        #                     set(
+        #                         [
+        #                             # user.cognito_user_sub
+        #                             str(user["id"])
+        #                             for user in roles[
+        #                                 str(relationship.role_id).strip()
+        #                             ].users
+        #                             # if hasattr(user, "cognito_user_sub")
+        #                             if ("id" in user)
+        #                         ]
+        #                     )
+        #                 )
+
+        #                 if (
+        #                     relationship.role_id
+        #                     and roles.get(str(relationship.role_id).strip())
+        #                     and relationship.user_id
+        #                     and users.get(str(relationship.user_id).strip())
+        #                     and str(relationship.user_id).strip() not in user_ids
+        #                 ):
+
+        #                     roles[str(relationship.role_id).strip()].users.append(
+        #                         users.get(str(relationship.user_id).strip())
+        #                     )
 
         return SimilarUsersType(
             items=roles.values(),
