@@ -313,7 +313,6 @@ def save_relationships_handler(info, relationships):
 
 def get_roles(user_id, channel, is_admin, group_id):
     try:
-        print("S~~~T~~~A~~~R~~~T~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         if not user_id:
             raise Exception("Invalid user ID.", 403)
         elif not channel:
@@ -340,8 +339,6 @@ def get_roles(user_id, channel, is_admin, group_id):
 
         if len(role_ids) < 1:
             raise Exception("The current user is not assigned any role", 403)
-
-        print("E~~~N~~~D~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
         return [role for role in RoleModel.scan(RoleModel.role_id.is_in(*role_ids))]
     except Exception as e:
