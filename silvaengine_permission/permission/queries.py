@@ -490,7 +490,10 @@ def resolve_certificate(info, **kwargs):
             expires_in=response.get("AuthenticationResult", {}).get("ExpiresIn"),
             token_type=response.get("AuthenticationResult", {}).get("TokenType"),
             context=token_claims,
-            permissions=get_user_permissions(token_claims, info.context.get("channel")),
+            permissions=get_user_permissions(
+                authorizer=token_claims,
+                channel=info.context.get("channel"),
+            ),
         )
     except Exception as e:
         raise e
