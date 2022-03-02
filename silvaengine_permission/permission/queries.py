@@ -299,22 +299,26 @@ def resolve_users(info, **kwargs):
             return None
 
         fn = Utility.import_dynamically(
-            module_name="relation_engine",
-            function_name="get_users_by_cognito_user_id",
-            class_name="RelationEngine",
-            constructor_parameters={"logger": info.context.get("logger")},
+            module_name="user_engine",
+            function_name="get_users_by_ids",
+            class_name="UserEngine",
+            constructor_parameters={
+                "logger": info.context.get("logger"),
+                **dict(info.context.get("setting", {})),
+            },
         )
 
         if callable(fn):
             users = fn(
-                list(
+                user_ids=list(
                     set(
                         [
                             str(relationship.user_id).strip()
                             for relationship in relationships
                         ]
                     )
-                )
+                ),
+                settings=dict(info.context.get("setting", {})),
             )
 
             if len(users):

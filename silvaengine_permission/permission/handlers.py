@@ -597,9 +597,13 @@ def get_roles_by_cognito_user_sub(
 # Obtain user roles according to the specified user ID
 # relationship_type: 0 - team, 1 - seller
 def get_users_by_role_type(
-    role_types, channel, relationship_type=0, group_ids=None
+    role_types, channel, settings, relationship_type=0, group_ids=None
 ) -> list:
-    if type(role_types) is not list and len(role_types):
+    if (
+        (type(role_types) is not list and len(role_types))
+        or not channel
+        or not settings
+    ):
         return []
 
     role_types = list(set([int(role_type) for role_type in role_types]))
@@ -633,18 +637,16 @@ def get_users_by_role_type(
         ]
 
         if len(relationships):
-            cognito_user_subs = [
-                relationship.get("user_id") for relationship in relationships
-            ]
+            user_ids = [relationship.get("user_id") for relationship in relationships]
             users = {}
             response = {}
 
-            if len(cognito_user_subs):
+            if len(user_ids):
                 method = Utility.import_dynamically(
-                    "relation_engine",
-                    "get_users_by_cognito_user_id",
-                    "RelationEngine",
-                    {"logger": None},
+                    "user_engine",
+                    "get_users_by_ids",
+                    "UserEngine",
+                    {"logger": None, **settings},
                 )
 
                 if not callable(method):
@@ -652,7 +654,7 @@ def get_users_by_role_type(
                         "Module is not exists or the function is uncallable", 500
                     )
 
-                users = method(cognito_user_subs)
+                users = method(user_ids=user_ids, settings=settings)
 
             for relationship in relationships:
                 if (
@@ -780,6 +782,7 @@ def delete_relationships_by_condition(
 # Check user permissions.
 def check_user_permissions(
     channel,
+    settings,
     module_name,
     class_name,
     function_name,
@@ -793,6 +796,7 @@ def check_user_permissions(
     try:
         if (
             not channel
+            or not settings
             or not module_name
             or not class_name
             or not function_name
@@ -805,16 +809,16 @@ def check_user_permissions(
             return False
 
         get_users = Utility.import_dynamically(
-            "relation_engine",
-            "get_users_by_cognito_user_id",
-            "RelationEngine",
-            {"logger": logger},
+            "user_engine",
+            "get_users_by_ids",
+            "UserEngine",
+            {"logger": logger, **dict(settings)},
         )
 
         if not callable(get_users):
             raise Exception("Module is not exists or the function is uncallable", 500)
 
-        users = get_users([str(user_id).strip()])
+        users = get_users(user_ids=[str(user_id).strip()], settings=settings)
 
         if len(users) < 1:
             return False
