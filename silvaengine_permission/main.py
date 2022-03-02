@@ -274,7 +274,7 @@ class Permission(object):
     # Save role relationships
     def save_role_relationship(
         self,
-        info,
+        channel,
         role_type,
         relationship_type,
         group_ids,
@@ -283,16 +283,15 @@ class Permission(object):
         by_group_id=False,
     ):
         try:
+            operator_id = str(updated_by).strip() if updated_by else "0"
             # 1. Get roles by role type
-            roles = get_roles_by_type(
-                types=[role_type], channel=str(info.context.get("apply_to")).strip()
-            )
+            roles = get_roles_by_type(types=[role_type], channel=str(channel).strip())
 
             # 2. save relationship.
             if type(roles.get(role_type)) is list and type(user_ids) is list:
                 for role in roles.get(role_type):
                     kwargs = {
-                        "channel": str(info.context.get("apply_to")).strip(),
+                        "channel": str(channel).strip(),
                         "role_ids": [role.role_id],
                         "relationship_type": relationship_type,
                         "user_ids": user_ids,
@@ -324,11 +323,19 @@ class Permission(object):
                                         if str(group_id).strip() != "":
                                             kwargs["group_id"] = str(group_id).strip()
 
-                                            create_relationship_handler(info, kwargs)
+                                            create_relationship_handler(
+                                                channel=str(channel).strip(),
+                                                operator_id=operator_id,
+                                                **kwargs,
+                                            )
                             else:
                                 kwargs["group_id"] = str(group_ids).strip()
 
-                                create_relationship_handler(info, kwargs)
+                                create_relationship_handler(
+                                    channel=str(channel).strip(),
+                                    operator_id=operator_id,
+                                    **kwargs,
+                                )
 
         except Exception as e:
             raise e
@@ -336,7 +343,7 @@ class Permission(object):
     # Assign users to role.
     def assign_roles_to_users(
         self,
-        info,
+        channel,
         role_users_map,
         relationship_type,
         updated_by,
@@ -345,6 +352,7 @@ class Permission(object):
     ):
         try:
             if type(role_users_map) is dict and len(role_users_map):
+                operator_id = str(updated_by).strip() if updated_by else "0"
                 group_ids = None
 
                 if (
@@ -357,7 +365,7 @@ class Permission(object):
                     user_ids = list(
                         set(
                             [
-                                user_id
+                                str(user_id).strip()
                                 for items in role_users_map.values()
                                 for user_id in items
                             ]
@@ -365,7 +373,7 @@ class Permission(object):
                     )
 
                     delete_relationships_by_condition(
-                        channel=str(info.context.get("apply_to")).strip(),
+                        channel=str(channel).strip(),
                         relationship_type=relationship_type,
                         group_ids=group_ids,
                         user_ids=user_ids,
@@ -385,19 +393,27 @@ class Permission(object):
                             for group_id in list(set(group_ids)):
                                 kwargs["group_id"] = group_id
 
-                                create_relationship_handler(info, kwargs)
+                                create_relationship_handler(
+                                    channel=str(channel).strip(),
+                                    operator_id=operator_id,
+                                    **kwargs,
+                                )
                         else:
-                            create_relationship_handler(info, kwargs)
+                            create_relationship_handler(
+                                channel=str(channel).strip(),
+                                operator_id=operator_id,
+                                **kwargs,
+                            )
         except Exception as e:
             raise e
 
     # Remove user's role
     def remove_roles_from_users(
-        self, info, relationship_type, user_ids=None, group_ids=None, role_ids=None
+        self, channel, relationship_type, user_ids=None, group_ids=None, role_ids=None
     ):
         try:
             delete_relationships_by_condition(
-                channel=str(info.context.get("apply_to")).strip(),
+                channel=str(channel).strip(),
                 relationship_type=relationship_type,
                 group_ids=group_ids,
                 user_ids=user_ids,

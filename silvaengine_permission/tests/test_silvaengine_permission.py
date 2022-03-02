@@ -25,7 +25,6 @@ setting = {
     "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
     "app_client_id": os.getenv("APP_CLIENT_ID"),
     "app_client_secret": os.getenv("APP_CLIENT_SECRET"),
-    "custom_hooks": "relation_engine:RelationEngine:get_users_by_cognito_user_id",
 }
 
 

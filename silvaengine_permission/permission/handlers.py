@@ -15,7 +15,7 @@ import uuid, json, time, urllib.request, os
 
 
 # Create role
-def create_role_handler(info, kwargs):
+def create_role_handler(channel, kwargs):
     try:
         role_id = str(uuid.uuid1())
         now = datetime.utcnow()
@@ -25,7 +25,7 @@ def create_role_handler(info, kwargs):
             **{
                 "name": kwargs.get("name"),
                 "type": int(kwargs.get("role_type", 0)),
-                "apply_to": str(info.context.get("apply_to")),
+                "apply_to": str(channel).strip(),
                 "is_admin": bool(kwargs.get("is_admin", True)),
                 "permissions": kwargs.get("permissions", []),
                 "description": kwargs.get("role_description"),
@@ -42,7 +42,7 @@ def create_role_handler(info, kwargs):
 
 
 # Update role for specified ID.
-def update_role_handler(info, kwargs):
+def update_role_handler(channel, kwargs):
     try:
         role = RoleModel(kwargs.get("role_id"))
         actions = [
@@ -63,7 +63,7 @@ def update_role_handler(info, kwargs):
                 actions.append(getattr(RoleModel, field).set(kwargs.get(argument)))
 
         condition = (RoleModel.role_id == kwargs.get("role_id")) & (
-            RoleModel.apply_to == info.context.get("apply_to")
+            RoleModel.apply_to == str(channel).strip()
         )
 
         role.update(
@@ -77,13 +77,13 @@ def update_role_handler(info, kwargs):
 
 
 # Delete role by specified ID.
-def delete_role_handler(info, role_id):
+def delete_role_handler(channel, role_id):
     try:
         if role_id is None or str(role_id).strip() == "":
             raise Exception("`roleId` is required", 400)
 
         condition = (RoleModel.role_id == role_id) & (
-            RoleModel.apply_to == info.context.get("apply_to")
+            RoleModel.apply_to == str(channel).strip()
         )
 
         # Delete the role record.
@@ -93,12 +93,12 @@ def delete_role_handler(info, role_id):
 
 
 # Create relationship of role / group / user.
-def create_relationship_handler(info, kwargs):
+def create_relationship_handler(channel, operator_id, kwargs):
     try:
         relationship_id = str(uuid.uuid1())
         now = datetime.utcnow()
         filter_conditions = (
-            (RelationshipModel.apply_to == info.context.get("apply_to"))
+            (RelationshipModel.apply_to == str(channel).strip())
             & (RelationshipModel.type == int(kwargs.get("relationship_type", 0)))
             & (RelationshipModel.user_id == str(kwargs.get("user_id")).strip())
             & (RelationshipModel.role_id == str(kwargs.get("role_id")).strip())
@@ -122,7 +122,7 @@ def create_relationship_handler(info, kwargs):
                     str(
                         kwargs.get(
                             "updated_by",
-                            info.context.get("authorizer", {}).get("user_id", "setup"),
+                            operator_id if operator_id else "setup",
                         )
                     ).strip()
                 ),
@@ -158,7 +158,7 @@ def create_relationship_handler(info, kwargs):
                     condition=(
                         RelationshipModel.relationship_id.is_in(*relationship_ids)
                     )
-                    & (RelationshipModel.apply_to == info.context.get("apply_to")),
+                    & (RelationshipModel.apply_to == str(channel).strip()),
                 )
 
             relationship_id = relationship_ids[0]
@@ -167,7 +167,7 @@ def create_relationship_handler(info, kwargs):
                 relationship_id,
                 **{
                     "type": int(kwargs.get("relationship_type", 0)),
-                    "apply_to": str(info.context.get("apply_to")),
+                    "apply_to": str(channel).strip(),
                     "user_id": str(kwargs.get("user_id")).strip(),
                     "role_id": str(kwargs.get("role_id")).strip(),
                     "group_id": str(kwargs.get("group_id")).strip(),
@@ -176,7 +176,7 @@ def create_relationship_handler(info, kwargs):
                     "updated_by": str(
                         kwargs.get(
                             "updated_by",
-                            info.context.get("authorizer", {}).get("user_id", "setup"),
+                            operator_id if operator_id else "setup",
                         )
                     ).strip(),
                     "status": bool(kwargs.get("status", True)),
@@ -190,7 +190,7 @@ def create_relationship_handler(info, kwargs):
 
 
 # Update relationship for specified ID.
-def update_relationship_handler(info, kwargs):
+def update_relationship_handler(channel, kwargs):
     try:
         relationship = RelationshipModel(kwargs.get("relationship_id"))
         actions = [
@@ -218,7 +218,7 @@ def update_relationship_handler(info, kwargs):
         if need_update:
             condition = (
                 RelationshipModel.relationship_id == kwargs.get("relationship_id")
-            ) & (RelationshipModel.apply_to == info.context.get("apply_to"))
+            ) & (RelationshipModel.apply_to == str(channel).strip())
 
             relationship.update(
                 actions=actions,
@@ -231,7 +231,7 @@ def update_relationship_handler(info, kwargs):
 
 
 # Delete relationship by specified ID.
-def delete_relationship_handler(info, relationship_id):
+def delete_relationship_handler(channel, relationship_id):
     try:
         if relationship_id is None or str(relationship_id).strip() == "":
             raise Exception("`relationshipId` is required", 400)
@@ -245,7 +245,7 @@ def delete_relationship_handler(info, relationship_id):
 
 
 # Bulk save relationships
-def save_relationships_handler(info, relationships):
+def save_relationships_handler(channel, operator_id, relationships):
     try:
         if (
             relationships is None
@@ -270,7 +270,7 @@ def save_relationships_handler(info, relationships):
 
             filter_conditions = (
                 (RelationshipModel.type == int(relationship.get("type", 0)))
-                & (RelationshipModel.apply_to == info.context.get("apply_to"))
+                & (RelationshipModel.apply_to == str(channel).strip())
                 & (
                     RelationshipModel.user_id
                     == str(relationship.get("user_id")).strip()
@@ -284,14 +284,17 @@ def save_relationships_handler(info, relationships):
                 )
 
             for item in RelationshipModel.scan(filter_condition=filter_conditions):
-                delete_relationship_handler(info, str(item.relationship_id).strip())
+                delete_relationship_handler(
+                    channel=channel,
+                    relationship_id=str(item.relationship_id).strip(),
+                )
 
         for relationship in relationships:
             RelationshipModel(
                 str(uuid.uuid1()),
                 **{
                     "type": int(relationship.get("type", 0)),
-                    "apply_to": str(info.context.get("apply_to")).strip(),
+                    "apply_to": str(channel).strip(),
                     "user_id": str(relationship.get("user_id")).strip(),
                     "role_id": str(relationship.get("role_id")).strip(),
                     "group_id": str(relationship.get("group_id")).strip(),
@@ -300,7 +303,7 @@ def save_relationships_handler(info, relationships):
                     "updated_by": str(
                         relationship.get(
                             "updated_by",
-                            info.context.get("authorizer", {}).get("user_id", "setup"),
+                            operator_id if operator_id else "setup",
                         )
                     ).strip(),
                     "status": bool(relationship.get("status", True)),

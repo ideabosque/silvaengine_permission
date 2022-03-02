@@ -39,7 +39,10 @@ class CreateRole(Mutation):
             role = RoleType(
                 **Utility.json_loads(
                     Utility.json_dumps(
-                        create_role_handler(info, kwargs).__dict__["attribute_values"]
+                        create_role_handler(
+                            channel=info.context.get("channel"),
+                            **kwargs,
+                        ).__dict__["attribute_values"]
                     )
                 )
             )
@@ -70,7 +73,10 @@ class UpdateRole(Mutation):
             role = RoleType(
                 **Utility.json_loads(
                     Utility.json_dumps(
-                        update_role_handler(info, kwargs).__dict__["attribute_values"]
+                        update_role_handler(
+                            channel=info.context.get("channel"),
+                            **kwargs,
+                        ).__dict__["attribute_values"]
                     )
                 )
             )
@@ -91,7 +97,10 @@ class DeleteRole(Mutation):
     @staticmethod
     def mutate(root, info, **kwargs):
         try:
-            delete_role_handler(info, kwargs.get("role_id"))
+            delete_role_handler(
+                channel=info.context.get("channel"),
+                role_id=kwargs.get("role_id"),
+            )
             return DeleteRole(ok=True)
         except Exception as e:
             info.context.get("logger").exception(traceback.format_exc())
@@ -116,9 +125,13 @@ class CreateRelationship(Mutation):
             relationship = RelationshipType(
                 **Utility.json_loads(
                     Utility.json_dumps(
-                        create_relationship_handler(info, kwargs).__dict__[
-                            "attribute_values"
-                        ]
+                        create_relationship_handler(
+                            channel=info.context.get("channel"),
+                            operator_id=info.context.get("authorizer", {}).get(
+                                "user_id", "setup"
+                            ),
+                            **kwargs,
+                        ).__dict__["attribute_values"]
                     )
                 )
             )
@@ -148,9 +161,10 @@ class UpdateRelationship(Mutation):
             relationship = RelationshipType(
                 **Utility.json_loads(
                     Utility.json_dumps(
-                        update_relationship_handler(info, kwargs).__dict__[
-                            "attribute_values"
-                        ]
+                        update_relationship_handler(
+                            channel=info.context.get("channel"),
+                            **kwargs,
+                        ).__dict__["attribute_values"]
                     )
                 )
             )
@@ -171,7 +185,10 @@ class DeleteRelationship(Mutation):
     @staticmethod
     def mutate(root, info, **kwargs):
         try:
-            delete_relationship_handler(info, kwargs.get("relationship_id"))
+            delete_relationship_handler(
+                channel=info.context.get("channel"),
+                relationship_id=kwargs.get("relationship_id"),
+            )
             return DeleteRelationship(ok=True)
         except Exception as e:
             info.context.get("logger").exception(traceback.format_exc())
@@ -188,7 +205,11 @@ class SaveRelationships(Mutation):
     @staticmethod
     def mutate(root, info, **kwargs):
         try:
-            save_relationships_handler(info, kwargs.get("relationships"))
+            save_relationships_handler(
+                channel=info.context.get("channel"),
+                operator_id=info.context.get("authorizer", {}).get("user_id", "setup"),
+                relationships=kwargs.get("relationships"),
+            )
             return SaveRelationships(ok=True)
         except Exception as e:
             info.context.get("logger").exception(traceback.format_exc())
