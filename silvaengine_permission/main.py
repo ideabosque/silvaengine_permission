@@ -17,7 +17,7 @@ from .permission.schema import (
 )
 from .permission.handlers import (
     get_roles,
-    get_roles_by_cognito_user_sub,
+    get_roles_by_user_id,
     get_users_by_role_type,
     create_relationship_handler,
     get_roles_by_type,
@@ -238,18 +238,18 @@ class Permission(object):
         )
 
     # Get roles
-    def get_roles_by_cognito_user_sub(
+    def get_roles_by_user_id(
         self,
         channel,
-        cognito_user_sub,
+        user_id,
         relationship_type,
         group_id=None,
         ignore_permissions=True,
     ):
         try:
-            return get_roles_by_cognito_user_sub(
+            return get_roles_by_user_id(
                 channel=channel,
-                user_id=cognito_user_sub,
+                user_id=user_id,
                 relationship_type=relationship_type,
                 group_id=group_id,
                 ignore_permissions=ignore_permissions,
@@ -428,6 +428,7 @@ class Permission(object):
     def check_user_permissions(
         self,
         channel,
+        settings,
         module_name,
         class_name,
         function_name,
@@ -440,6 +441,7 @@ class Permission(object):
         try:
             return check_user_permissions(
                 channel=str(channel).strip(),
+                settings=settings,
                 module_name=module_name,
                 class_name=class_name,
                 function_name=function_name,
@@ -463,7 +465,7 @@ class Permission(object):
         ignore_permissions=True,
     ):
         try:
-            roles = get_roles_by_cognito_user_sub(
+            roles = get_roles_by_user_id(
                 channel=channel,
                 user_id=user_id,
                 relationship_type=relationship_type,

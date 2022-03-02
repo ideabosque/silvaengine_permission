@@ -518,7 +518,7 @@ def check_permission(roles, resource) -> bool:
 
 
 # Obtain user roles according to the specified user ID
-def get_roles_by_cognito_user_sub(
+def get_roles_by_user_id(
     user_id, relationship_type, channel, group_id=None, ignore_permissions=True
 ):
     # 1. If user or relationship type is empty

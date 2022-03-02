@@ -810,7 +810,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
 
     @unittest.skip("demonstrating skipping")
     def test_get_roles(self):
-        response = self.instance.get_roles_by_cognito_user_sub(
+        response = self.instance.get_roles_by_user_id(
             "f2b3a074-eb9e-4210-81b2-cbe617ecc50b"
         )
         print("Response:", response)
