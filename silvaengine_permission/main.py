@@ -249,7 +249,7 @@ class Permission(object):
         try:
             return get_roles_by_cognito_user_sub(
                 channel=channel,
-                cognito_user_sub=cognito_user_sub,
+                user_id=cognito_user_sub,
                 relationship_type=relationship_type,
                 group_id=group_id,
                 ignore_permissions=ignore_permissions,
