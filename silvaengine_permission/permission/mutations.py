@@ -40,7 +40,7 @@ class CreateRole(Mutation):
                 **Utility.json_loads(
                     Utility.json_dumps(
                         create_role_handler(
-                            channel=info.context.get("channel"), kwargs=kwargs
+                            channel=info.context.get("apply_to"), kwargs=kwargs
                         ).__dict__["attribute_values"]
                     )
                 )
@@ -73,7 +73,7 @@ class UpdateRole(Mutation):
                 **Utility.json_loads(
                     Utility.json_dumps(
                         update_role_handler(
-                            channel=info.context.get("channel"),
+                            channel=info.context.get("apply_to"),
                             kwargs=kwargs,
                         ).__dict__["attribute_values"]
                     )
@@ -97,7 +97,7 @@ class DeleteRole(Mutation):
     def mutate(root, info, **kwargs):
         try:
             delete_role_handler(
-                channel=info.context.get("channel"),
+                channel=info.context.get("apply_to"),
                 role_id=kwargs.get("role_id"),
             )
             return DeleteRole(ok=True)
@@ -125,7 +125,7 @@ class CreateRelationship(Mutation):
                 **Utility.json_loads(
                     Utility.json_dumps(
                         create_relationship_handler(
-                            channel=info.context.get("channel"),
+                            channel=info.context.get("apply_to"),
                             operator_id=info.context.get("authorizer", {}).get(
                                 "user_id", "setup"
                             ),
@@ -161,7 +161,7 @@ class UpdateRelationship(Mutation):
                 **Utility.json_loads(
                     Utility.json_dumps(
                         update_relationship_handler(
-                            channel=info.context.get("channel"), kwargs=kwargs
+                            channel=info.context.get("apply_to"), kwargs=kwargs
                         ).__dict__["attribute_values"]
                     )
                 )
@@ -184,7 +184,7 @@ class DeleteRelationship(Mutation):
     def mutate(root, info, **kwargs):
         try:
             delete_relationship_handler(
-                channel=info.context.get("channel"),
+                channel=info.context.get("apply_to"),
                 relationship_id=kwargs.get("relationship_id"),
             )
             return DeleteRelationship(ok=True)
@@ -204,7 +204,7 @@ class SaveRelationships(Mutation):
     def mutate(root, info, **kwargs):
         try:
             save_relationships_handler(
-                channel=info.context.get("channel"),
+                channel=info.context.get("apply_to"),
                 operator_id=info.context.get("authorizer", {}).get("user_id", "setup"),
                 relationships=kwargs.get("relationships"),
             )
