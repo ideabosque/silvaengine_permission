@@ -637,7 +637,14 @@ def get_users_by_role_type(
         ]
 
         if len(relationships):
-            user_ids = [relationship.get("user_id") for relationship in relationships]
+            user_ids = list(
+                set(
+                    [
+                        str(relationship.get("user_id")).strip()
+                        for relationship in relationships
+                    ]
+                )
+            )
             users = {}
             response = {}
 

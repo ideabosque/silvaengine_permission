@@ -40,8 +40,7 @@ class CreateRole(Mutation):
                 **Utility.json_loads(
                     Utility.json_dumps(
                         create_role_handler(
-                            channel=info.context.get("channel"),
-                            **kwargs,
+                            channel=info.context.get("channel"), kwargs=kwargs
                         ).__dict__["attribute_values"]
                     )
                 )
@@ -75,7 +74,7 @@ class UpdateRole(Mutation):
                     Utility.json_dumps(
                         update_role_handler(
                             channel=info.context.get("channel"),
-                            **kwargs,
+                            kwargs=kwargs,
                         ).__dict__["attribute_values"]
                     )
                 )
@@ -130,7 +129,7 @@ class CreateRelationship(Mutation):
                             operator_id=info.context.get("authorizer", {}).get(
                                 "user_id", "setup"
                             ),
-                            **kwargs,
+                            kwargs=kwargs,
                         ).__dict__["attribute_values"]
                     )
                 )
@@ -162,8 +161,7 @@ class UpdateRelationship(Mutation):
                 **Utility.json_loads(
                     Utility.json_dumps(
                         update_relationship_handler(
-                            channel=info.context.get("channel"),
-                            **kwargs,
+                            channel=info.context.get("channel"), kwargs=kwargs
                         ).__dict__["attribute_values"]
                     )
                 )
