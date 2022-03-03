@@ -62,13 +62,19 @@ def update_role_handler(channel, kwargs):
             if kwargs.get(argument) is not None:
                 actions.append(getattr(RoleModel, field).set(kwargs.get(argument)))
 
-        condition = (RoleModel.role_id == kwargs.get("role_id")) & (
-            RoleModel.apply_to == str(channel).strip()
+        # condition = (RoleModel.role_id == kwargs.get("role_id")) & (
+        #     RoleModel.apply_to == str(channel).strip()
+        # )
+        print(
+            "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
         )
+        print(kwargs.get("role_id"), str(channel).strip())
 
         role.update(
             actions=actions,
-            condition=condition,
+            # condition=condition,
+            condition=(RoleModel.role_id == kwargs.get("role_id"))
+            & (RoleModel.apply_to == str(channel).strip()),
         )
 
         return RoleModel.get(kwargs.get("role_id"), None)
