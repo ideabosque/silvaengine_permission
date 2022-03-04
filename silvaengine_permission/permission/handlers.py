@@ -349,7 +349,9 @@ def get_roles(user_id, channel, is_admin, group_id):
         if len(role_ids) < 1:
             raise Exception("The current user is not assigned any role", 403)
 
-        return [role for role in RoleModel.scan(RoleModel.role_id.is_in(*role_ids))]
+        return Utility.json_dumps(
+            [role for role in RoleModel.scan(RoleModel.role_id.is_in(*role_ids))]
+        )
     except Exception as e:
         raise e
 
