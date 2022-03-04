@@ -107,6 +107,18 @@ def deploy() -> list:
                     "disabled_in_resources": True,
                     "settings": "beta_core_api",
                 },
+                "permission_check_callback": {
+                    "is_static": False,
+                    "label": "Permission Check Callback",
+                    "mutation": [],
+                    "query": [],
+                    "type": "RequestResponse",
+                    "support_methods": ["POST", "GET"],
+                    "is_auth_required": False,
+                    "is_graphql": False,
+                    "disabled_in_resources": True,
+                    "settings": "beta_core_api",
+                },
             },
         }
     ]
@@ -229,12 +241,12 @@ class Permission(object):
             raise e
 
     # Implementation of hook configuration `permission_check_hooks`.
-    def permission_check_callback(self, user_id, channel, is_admin, group_id):
+    def permission_check_callback(self, **params):
         return get_roles(
-            user_id=user_id,
-            channel=channel,
-            is_admin=is_admin,
-            group_id=group_id,
+            user_id=params.get("user_id"),
+            channel=params.get("channel"),
+            is_admin=params.get("is_admin"),
+            group_id=params.get("group_id"),
         )
 
     # Get roles
