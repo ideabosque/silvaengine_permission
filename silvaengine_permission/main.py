@@ -11,12 +11,11 @@ from silvaengine_utility import Utility
 from .permission.schema import (
     RoleQuery,
     RoleMutations,
-    CertificateQuery,
     role_type_class,
-    certificate_type_class,
 )
 from .permission.handlers import (
     get_roles,
+    get_user_permissions,
     get_roles_by_user_id,
     get_users_by_role_type,
     create_relationship_handler,
@@ -88,23 +87,6 @@ def deploy() -> list:
                     "support_methods": ["POST"],
                     "is_auth_required": True,
                     "is_graphql": True,
-                    "settings": "beta_core_api",
-                },
-                "login_graphql": {
-                    "is_static": False,
-                    "label": "Login",
-                    "mutation": [],
-                    "query": [
-                        {
-                            "action": "certificate",
-                            "label": "User Login",
-                        }
-                    ],
-                    "type": "RequestResponse",
-                    "support_methods": ["POST"],
-                    "is_auth_required": False,
-                    "is_graphql": True,
-                    "disabled_in_resources": True,
                     "settings": "beta_core_api",
                 },
                 "permission_check_callback": {
@@ -185,61 +167,6 @@ class Permission(object):
         except Exception as e:
             raise e
 
-    # Role interface by graphql
-    def login_graphql(self, **params):
-        try:
-            channel = params.get("endpoint_id")
-
-            if not channel:
-                raise Exception("Unrecognized request origin", 401)
-
-            schema = Schema(
-                query=CertificateQuery,
-                types=certificate_type_class(),
-            )
-            context = {
-                "logger": self.logger,
-                "setting": self.setting,
-                "context": params.get("context"),
-                "channel": str(channel).strip(),
-            }
-            variables = params.get("variables", {})
-            operations = params.get("query")
-            response = {
-                "errors": "Invalid operations.",
-                "status_code": 400,
-            }
-
-            if not operations:
-                return Utility.json_dumps(response)
-
-            execution_result = schema.execute(
-                operations, context_value=context, variable_values=variables
-            )
-
-            if not execution_result:
-                response = {
-                    "errors": "Invalid execution result.",
-                }
-            elif execution_result.errors:
-                response = {
-                    "errors": [
-                        Utility.format_error(e) for e in execution_result.errors
-                    ],
-                }
-            elif execution_result.invalid:
-                response = execution_result
-            elif execution_result.data:
-                response = {"data": execution_result.data, "status_code": 200}
-            else:
-                response = {
-                    "errors": "Uncaught execution error.",
-                }
-
-            return Utility.json_dumps(response)
-        except Exception as e:
-            raise e
-
     # Implementation of hook configuration `permission_check_hooks`.
     def permission_check_callback(self, **params):
         return get_roles(
@@ -248,6 +175,9 @@ class Permission(object):
             is_admin=params.get("is_admin"),
             group_id=params.get("group_id"),
         )
+
+    def get_user_permissions(self, authorizer, channel):
+        return get_user_permissions(authorizer=authorizer, channel=channel)
 
     # Get roles
     def get_roles_by_user_id(

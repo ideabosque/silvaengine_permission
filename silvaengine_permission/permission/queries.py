@@ -4,11 +4,9 @@ from __future__ import print_function
 from importlib.util import find_spec
 from importlib import import_module
 from silvaengine_utility import Utility
-from jose import jwk, jwt
 from .types import (
     RoleType as OutputRoleType,
     RolesType,
-    CertificateType,
     UserRelationshipType,
     SimilarUserType,
     SimilarUsersType,
@@ -16,9 +14,6 @@ from .types import (
 )
 from .models import RelationshipModel, RoleModel
 from .enumerations import RoleType
-from .handlers import get_user_permissions
-import boto3, os, hmac, hashlib, base64, json
-
 
 # @TODO: Apply status check
 def resolve_roles(info, **kwargs):
@@ -366,125 +361,6 @@ def resolve_role(info, **kwargs):
     return OutputRoleType(
         **Utility.json_loads(Utility.json_dumps(role.__dict__["attribute_values"]))
     )
-
-
-# Login
-def resolve_certificate(info, **kwargs):
-    try:
-        username = kwargs.get("username")
-        password = kwargs.get("password")
-
-        if not username or not password:
-            raise Exception("Username and password cannot be empty", 400)
-
-        settings = info.context.get("setting", {})
-        region_name = settings.get("region_name")
-        aws_access_key_id = settings.get("aws_access_key_id")
-        aws_secret_access_key = settings.get("aws_secret_access_key")
-        app_client_id = settings.get("app_client_id")
-        app_client_secret = settings.get("app_client_secret")
-
-        if (
-            not region_name
-            or not aws_access_key_id
-            or not aws_secret_access_key
-            or not app_client_id
-            or not app_client_secret
-        ):
-            raise Exception("Missing required configuration", 400)
-
-        cognitoIdp = boto3.client(
-            "cognito-idp",
-            region_name=region_name,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-        )
-        digest = hmac.new(
-            key=app_client_secret.encode("utf-8"),
-            msg=(username + app_client_id).encode("utf-8"),
-            digestmod=hashlib.sha256,
-        ).digest()
-        response = cognitoIdp.initiate_auth(
-            AuthFlow="USER_PASSWORD_AUTH",
-            AuthParameters={
-                "USERNAME": username,
-                "PASSWORD": password,
-                "SECRET_HASH": base64.b64encode(digest).decode(),
-            },
-            ClientId=app_client_id,
-        )
-
-        if not response or not response.get("AuthenticationResult", {}).get("IdToken"):
-            raise Exception("Failed to sign in on cognito")
-
-        # @TODO: hooks
-        hooks = (
-            [
-                hook.strip()
-                for hook in settings.get(
-                    "custom_signin_hooks",
-                ).split(",")
-            ]
-            if settings.get("custom_signin_hooks")
-            else []
-        )
-        # hooks = ["relation_engine:RelationEngine:get_default_for_login"]
-        token_claims = jwt.get_unverified_claims(
-            response.get("AuthenticationResult").get("IdToken")
-        )
-
-        if token_claims.get("teams"):
-            token_claims.pop("teams")
-
-        if len(hooks):
-            logger = info.context.get("logger")
-
-            for hook in hooks:
-                fragments = hook.split(":", 3)
-
-                if len(fragments) < 3:
-                    for i in (0, 3 - len(fragments)):
-                        fragments.append(None)
-                elif len(fragments) > 3:
-                    fragments = fragments[0:3]
-
-                module_name, class_name, function_name = fragments
-
-                # 1. Load module by dynamic
-                spec = find_spec(module_name)
-
-                if spec is None:
-                    continue
-
-                agent = import_module(module_name)
-
-                if hasattr(agent, class_name):
-                    agent = getattr(agent, class_name)(logger)
-
-                if not hasattr(agent, function_name) or not callable(
-                    getattr(agent, function_name)
-                ):
-                    continue
-
-                result = getattr(agent, function_name)(token_claims)
-
-                if type(result) is dict:
-                    token_claims.update(result)
-
-        return CertificateType(
-            access_token=response.get("AuthenticationResult", {}).get("AccessToken"),
-            id_token=response.get("AuthenticationResult", {}).get("IdToken"),
-            refresh_token=response.get("AuthenticationResult", {}).get("RefreshToken"),
-            expires_in=response.get("AuthenticationResult", {}).get("ExpiresIn"),
-            token_type=response.get("AuthenticationResult", {}).get("TokenType"),
-            context=token_claims,
-            permissions=get_user_permissions(
-                authorizer=token_claims,
-                channel=info.context.get("channel"),
-            ),
-        )
-    except Exception as e:
-        raise e
 
 
 # Role uniqueness detection

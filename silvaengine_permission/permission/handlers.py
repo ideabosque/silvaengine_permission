@@ -11,7 +11,7 @@ from pynamodb.transactions import TransactWrite
 from pynamodb.connection import Connection
 from .models import RelationshipModel, RoleModel
 from .enumerations import RoleRelationshipType, RoleType
-import uuid, json, time, urllib.request, os
+import uuid
 
 
 # Create role

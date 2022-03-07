@@ -5,7 +5,6 @@ from graphene import ObjectType, String, Int, Schema, Field, Boolean, List
 from .types import (
     RoleType,
     RolesType,
-    CertificateType,
     RelationshipsType,
     UserRelationshipsType,
     SimilarUsersType,
@@ -14,7 +13,6 @@ from .types import (
 from .queries import (
     resolve_roles,
     resolve_role,
-    resolve_certificate,
     resolve_users,
     resolve_detection,
 )
@@ -38,22 +36,6 @@ def role_type_class():
         RelationshipsType,
         UserRelationshipsType,
     ]
-
-
-def certificate_type_class():
-    return [CertificateType]
-
-
-# Query for user login
-class CertificateQuery(ObjectType):
-    certificate = Field(
-        CertificateType,
-        username=String(required=True),
-        password=String(required=True),
-    )
-
-    def resolve_certificate(self, info, **kwargs):
-        return resolve_certificate(info, **kwargs)
 
 
 # Query role list or role
