@@ -363,7 +363,7 @@ def get_user_permissions(authorizer, channel):
             raise Exception("Missing required parameter(s)")
 
         # cognito_user_sub = authorizer.get("sub")
-        user_id = authorizer.get("user_id")
+        user_id = str(authorizer.get("user_id")).strip()
 
         if not user_id:
             return None

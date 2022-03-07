@@ -20,6 +20,11 @@ from silvaengine_permission import Permission, RoleRelationshipType
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
 setting = {
+    "schema": os.getenv("DATABASE_SCHEMA"),
+    "user": os.getenv("DATABASE_USERNAME"),
+    "password": os.getenv("DATABASE_PASSWD"),
+    "host": os.getenv("DATABASE_HOST"),
+    "port": os.getenv("DATABASE_PORT"),
     "region_name": os.getenv("REGION_NAME"),
     "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID"),
     "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
@@ -121,7 +126,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
             }
         """
         variables = {
-            "roleId": "7774efc2-0a6e-11ec-9dc1-0242ac120002",
+            "roleId": "c9fae589-7ed9-11ec-837f-6f54a4b3f31f",
         }
         payload = {"query": query, "variables": variables}
         response = self.instance.role_graphql(**payload)
@@ -130,19 +135,18 @@ class SilvaEngineAuthTest(unittest.TestCase):
     @unittest.skip("demonstrating skipping")
     def test_role_detection(self):
         query = """
-            query detection( $name: String){
+            query detection( $name: String!){
                 detection (name: $name){
                     roles
                 }
             }
         """
-        # variables = {"name": "GWI Account Manager"}
-        variables = {}
+        variables = {"name": "GWI Account Manager"}
         payload = {"query": query, "variables": variables}
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
-    @unittest.skip("demonstrating skipping")
+    # @unittest.skip("demonstrating skipping")
     def test_get_users_graphql(self):
         query = """
             query users(
@@ -195,7 +199,6 @@ class SilvaEngineAuthTest(unittest.TestCase):
             "isAdminRole": True,
             "roleType": [1, 2, 3],
             "roleStatus": True,
-            "relationshipType": 3,
         }
         payload = {"query": query, "variables": variables}
         response = self.instance.role_graphql(**payload)
