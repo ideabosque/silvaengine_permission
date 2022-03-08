@@ -1,10 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-
-
-__author__ = "bl"
-
 from graphene import Schema
 from hashlib import md5
 from silvaengine_utility import Utility
@@ -24,6 +20,10 @@ from .permission.handlers import (
     check_user_permissions,
 )
 from .permission.enumerations import RoleRelationshipType
+
+
+__author__ = "bl"
+
 
 # Hook function applied to deployment
 def deploy() -> list:
@@ -269,7 +269,7 @@ class Permission(object):
                                             create_relationship_handler(
                                                 channel=str(channel).strip(),
                                                 operator_id=operator_id,
-                                                **kwargs,
+                                                kwargs=kwargs,
                                             )
                             else:
                                 kwargs["group_id"] = str(group_ids).strip()
@@ -277,7 +277,7 @@ class Permission(object):
                                 create_relationship_handler(
                                     channel=str(channel).strip(),
                                     operator_id=operator_id,
-                                    **kwargs,
+                                    kwargs=kwargs,
                                 )
 
         except Exception as e:
@@ -339,13 +339,13 @@ class Permission(object):
                                 create_relationship_handler(
                                     channel=str(channel).strip(),
                                     operator_id=operator_id,
-                                    **kwargs,
+                                    kwargs=kwargs,
                                 )
                         else:
                             create_relationship_handler(
                                 channel=str(channel).strip(),
                                 operator_id=operator_id,
-                                **kwargs,
+                                kwargs=kwargs,
                             )
         except Exception as e:
             raise e
