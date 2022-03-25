@@ -41,7 +41,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
     def tearDown(self):
         logger.info("Destory SilvaEngineAuthTest ...")
 
-    @unittest.skip("demonstrating skipping")
+    # @unittest.skip("demonstrating skipping")
     def test_get_roles_graphql(self):
         query = """
             query roles(
@@ -89,7 +89,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
         """
         variables = {
             "pageSize": 10,
-            "pageNumber": 1,
+            "pageNumber": 2,
             # "isAdmin": True,
             # "status": True,
             # "description": None,
@@ -146,7 +146,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
-    # @unittest.skip("demonstrating skipping")
+    @unittest.skip("demonstrating skipping")
     def test_get_users_graphql(self):
         query = """
             query users(

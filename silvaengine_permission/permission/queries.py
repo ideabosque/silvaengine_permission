@@ -28,7 +28,7 @@ def resolve_roles(info, **kwargs):
             "last_evaluated_key": None,
             "filter_condition": None,
         }
-        total = 0
+        # total = 0
 
         # Build filter conditions.
         # @SEE: {"ARGUMENT_NAME": "FIELD_NAME_OF_DATABASE_TABLE", ...}
@@ -85,30 +85,39 @@ def resolve_roles(info, **kwargs):
                 )
 
         # Count total of roles
-        for _ in RoleModel.scan(filter_condition=arguments.get("filter_condition")):
-            total += 1
+        # for _ in RoleModel.scan(filter_condition=arguments.get("filter_condition")):
+        #     total += 1
 
         # Pagination.
-        if arguments.get("limit") > 0 and kwargs.get("page_number", 0) > 1:
-            pagination_arguments = {
-                "limit": (int(kwargs.get("page_number", 0)) - 1)
-                * arguments.get("limit"),
-                "last_evaluated_key": None,
-                "filter_condition": arguments.get("filter_condition"),
-            }
+        pagination_offset = 0
+        page_number = kwargs.get("page_number", 1)
 
-            # Skip (int(kwargs.get("page_number", 0)) - 1) rows
-            pagination_results = RoleModel.scan(**pagination_arguments)
-            # Discard the results of the iteration, and extract the cursor of the page offset from the iterator.
-            _ = [role for role in pagination_results]
-            # The iterator needs to be traversed first, and then the pagination cursor can be obtained through `last_evaluated_key` after the traversal is completed.
-            arguments["last_evaluated_key"] = pagination_results.last_evaluated_key
+        if type(page_number) not in [str, int, float] or int(page_number) < 1:
+            page_number = 1
 
-            if (
-                arguments.get("last_evaluated_key") is None
-                or pagination_results.total_count == total
-            ):
-                return None
+        if arguments.get("limit", 0) > 0 and page_number > 1:
+            pagination_offset = (page_number - 1) * int(arguments.get("limit"))
+
+        pagination_arguments = {
+            "limit": pagination_offset if pagination_offset > 0 else None,
+            "last_evaluated_key": None,
+            "filter_condition": arguments.get("filter_condition"),
+        }
+        # Skip (int(kwargs.get("page_number", 0)) - 1) rows
+        pagination_results = RoleModel.scan(**pagination_arguments)
+        # Discard the results of the iteration, and extract the cursor of the page offset from the iterator.
+        _ = [role for role in pagination_results]
+        # The iterator needs to be traversed first, and then the pagination cursor can be obtained through `last_evaluated_key` after the traversal is completed.
+        if (
+            not pagination_results.last_evaluated_key
+            and pagination_results.total_count < pagination_offset
+        ):
+            return None
+
+        arguments["last_evaluated_key"] = pagination_results.last_evaluated_key
+
+        # if arguments.get("last_evaluated_key") is None:
+        #     return None
 
         # Query role form database.
         results = RoleModel.scan(**arguments)
@@ -126,9 +135,9 @@ def resolve_roles(info, **kwargs):
 
         return RolesType(
             items=roles,
-            page_number=kwargs.get("page_number", 1),
+            page_number=page_number,
             page_size=arguments.get("limit"),
-            total=total,
+            total=pagination_results.total_count,
         )
     except Exception as e:
         raise e
