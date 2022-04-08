@@ -43,18 +43,21 @@ def deploy() -> list:
                         {
                             "action": "createRelationship",
                             "label": "Create relationship",
+                            "visible": False,
                         },
                         {
                             "action": "updateRole",
-                            "label": "Modify Role",
+                            "label": "Edit Role",
                         },
                         {
                             "action": "updateRelationship",
                             "label": "Update relationship",
+                            "visible": False,
                         },
                         {
                             "action": "saveRelationships",
                             "label": "Bulk save relationships",
+                            "visible": False,
                         },
                         {
                             "action": "deleteRole",
@@ -63,12 +66,13 @@ def deploy() -> list:
                         {
                             "action": "deleteRelationship",
                             "label": "Delete relationship",
+                            "visible": False,
                         },
                     ],
                     "query": [
                         {
                             "action": "roles",
-                            "label": "View Roles",
+                            "label": "View Role Management",
                         },
                         {
                             "action": "role",
@@ -77,10 +81,12 @@ def deploy() -> list:
                         {
                             "action": "users",
                             "label": "Query Permission Relationships",
+                            "visible": False,
                         },
                         {
                             "action": "detection",
                             "label": "Role uniqueness detection",
+                            "visible": False,
                         },
                     ],
                     "type": "RequestResponse",
