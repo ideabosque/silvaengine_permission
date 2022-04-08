@@ -189,7 +189,7 @@ def create_relationship_handler(channel, operator_id, kwargs):
                 },
             ).save()
 
-        # print("Save successful:", relationship_id)
+        print("Save successful:", relationship_id)
         return RelationshipModel.get(relationship_id)
     except Exception as e:
         raise e
