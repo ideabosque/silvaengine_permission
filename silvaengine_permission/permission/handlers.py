@@ -19,6 +19,49 @@ def create_role_handler(channel, kwargs):
     try:
         role_id = str(uuid.uuid1())
         now = datetime.utcnow()
+        permissions = kwargs.get("permissions", [])
+        resources = {}
+        results = Utility.json_loads(
+            Utility.json_dumps(
+                [
+                    resource
+                    for resource in ResourceModel.scan(
+                        filter_condition=ResourceModel.apply_to == str(channel).strip()
+                    )
+                ]
+            )
+        )
+
+        for resource in results:
+            operations = []
+
+            for operation, items in resource.get("operations", {}).items():
+                for item in items:
+                    if item.get("visible") == False:
+                        operations.append(
+                            {
+                                "operation_name": item.get("action"),
+                                "operation": str(operation).strip(),
+                                "exclude": [],
+                            }
+                        )
+
+            if len(operations):
+                resources[resource.get("resource_id")] = operations
+
+        for rule in permissions:
+            if rule.get("resource_id") and resources.get(rule.get("resource_id")):
+                rule["permissions"] += resources.get(rule.get("resource_id"))
+                resources.pop(rule.get("resource_id"))
+
+        if len(resources):
+            for resource_id, items in resources.items():
+                permissions.append(
+                    {
+                        "resource_id": resource_id,
+                        "permissions": items,
+                    }
+                )
 
         RoleModel(
             role_id,
@@ -27,7 +70,8 @@ def create_role_handler(channel, kwargs):
                 "type": int(kwargs.get("role_type", 0)),
                 "apply_to": str(channel).strip(),
                 "is_admin": bool(kwargs.get("is_admin", True)),
-                "permissions": kwargs.get("permissions", []),
+                # "permissions": kwargs.get("permissions", []),
+                "permissions": permissions,
                 "description": kwargs.get("role_description"),
                 "status": bool(kwargs.get("status", True)),
                 "updated_by": kwargs.get("updated_by"),
@@ -62,19 +106,13 @@ def update_role_handler(channel, kwargs):
             if kwargs.get(argument) is not None:
                 actions.append(getattr(RoleModel, field).set(kwargs.get(argument)))
 
-        # condition = (RoleModel.role_id == kwargs.get("role_id")) & (
-        #     RoleModel.apply_to == str(channel).strip()
-        # )
-        print(
-            "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+        condition = (RoleModel.role_id == kwargs.get("role_id")) & (
+            RoleModel.apply_to == str(channel).strip()
         )
-        print(kwargs.get("role_id"), str(channel).strip())
 
         role.update(
             actions=actions,
-            # condition=condition,
-            condition=(RoleModel.role_id == kwargs.get("role_id"))
-            & (RoleModel.apply_to == str(channel).strip()),
+            condition=condition,
         )
 
         return RoleModel.get(kwargs.get("role_id"), None)

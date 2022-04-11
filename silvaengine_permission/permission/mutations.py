@@ -36,15 +36,16 @@ class CreateRole(Mutation):
     @staticmethod
     def mutate(root, info, **kwargs):
         try:
-            role = RoleType(
-                **Utility.json_loads(
-                    Utility.json_dumps(
-                        create_role_handler(
-                            channel=info.context.get("apply_to"), kwargs=kwargs
-                        ).__dict__["attribute_values"]
-                    )
+
+            values = Utility.json_loads(
+                Utility.json_dumps(
+                    create_role_handler(
+                        channel=info.context.get("apply_to"), kwargs=kwargs
+                    ).__dict__["attribute_values"]
                 )
             )
+            print(values)
+            role = RoleType(**values)
 
             return CreateRole(role=role)
         except Exception as e:

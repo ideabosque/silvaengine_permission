@@ -41,7 +41,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
     def tearDown(self):
         logger.info("Destory SilvaEngineAuthTest ...")
 
-    # @unittest.skip("demonstrating skipping")
+    @unittest.skip("demonstrating skipping")
     def test_get_roles_graphql(self):
         query = """
             query roles(
@@ -204,7 +204,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
-    @unittest.skip("demonstrating skipping")
+    # @unittest.skip("demonstrating skipping")
     def test_create_role(self):
         mutation = """
             mutation createRole(
@@ -249,7 +249,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
         """
 
         variables = {
-            "name": "GWI Account Manager",
+            "name": "Test Role",
             "type": 0,
             "isAdmin": True,
             "permissions": [
@@ -270,10 +270,10 @@ class SilvaEngineAuthTest(unittest.TestCase):
                 },
             ],
             "updatedBy": "setup",
-            "description": "Product manager",
+            "description": "Test Role",
         }
 
-        payload = {"mutation": mutation, "variables": variables}
+        payload = {"query": mutation, "variables": variables}
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
