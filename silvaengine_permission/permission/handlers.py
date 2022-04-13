@@ -19,49 +19,52 @@ def create_role_handler(channel, kwargs):
     try:
         role_id = str(uuid.uuid1())
         now = datetime.utcnow()
-        permissions = kwargs.get("permissions", [])
-        resources = {}
-        results = Utility.json_loads(
-            Utility.json_dumps(
-                [
-                    resource
-                    for resource in ResourceModel.scan(
-                        filter_condition=ResourceModel.apply_to == str(channel).strip()
-                    )
-                ]
-            )
+        permissions = _get_unvisible_permissions(
+            channel=channel,
+            permissions=kwargs.get("permissions", []),
         )
+        # resources = {}
+        # results = Utility.json_loads(
+        #     Utility.json_dumps(
+        #         [
+        #             resource
+        #             for resource in ResourceModel.scan(
+        #                 filter_condition=ResourceModel.apply_to == str(channel).strip()
+        #             )
+        #         ]
+        #     )
+        # )
 
-        for resource in results:
-            operations = []
+        # for resource in results:
+        #     operations = []
 
-            for operation, items in resource.get("operations", {}).items():
-                for item in items:
-                    if item.get("visible") == False:
-                        operations.append(
-                            {
-                                "operation_name": item.get("action"),
-                                "operation": str(operation).strip(),
-                                "exclude": [],
-                            }
-                        )
+        #     for operation, items in resource.get("operations", {}).items():
+        #         for item in items:
+        #             if item.get("visible") == False:
+        #                 operations.append(
+        #                     {
+        #                         "operation_name": item.get("action"),
+        #                         "operation": str(operation).strip(),
+        #                         "exclude": [],
+        #                     }
+        #                 )
 
-            if len(operations):
-                resources[resource.get("resource_id")] = operations
+        #     if len(operations):
+        #         resources[resource.get("resource_id")] = operations
 
-        for rule in permissions:
-            if rule.get("resource_id") and resources.get(rule.get("resource_id")):
-                rule["permissions"] += resources.get(rule.get("resource_id"))
-                resources.pop(rule.get("resource_id"))
+        # for rule in permissions:
+        #     if rule.get("resource_id") and resources.get(rule.get("resource_id")):
+        #         rule["permissions"] += resources.get(rule.get("resource_id"))
+        #         resources.pop(rule.get("resource_id"))
 
-        if len(resources):
-            for resource_id, items in resources.items():
-                permissions.append(
-                    {
-                        "resource_id": resource_id,
-                        "permissions": items,
-                    }
-                )
+        # if len(resources):
+        #     for resource_id, items in resources.items():
+        #         permissions.append(
+        #             {
+        #                 "resource_id": resource_id,
+        #                 "permissions": items,
+        #             }
+        #         )
 
         RoleModel(
             role_id,
@@ -104,7 +107,15 @@ def update_role_handler(channel, kwargs):
 
         for argument, field in rules.items():
             if kwargs.get(argument) is not None:
-                actions.append(getattr(RoleModel, field).set(kwargs.get(argument)))
+                value = kwargs.get(argument)
+
+                if argument in ["permissions"]:
+                    value = _get_unvisible_permissions(
+                        channel=channel,
+                        permissions=kwargs.get("permissions", []),
+                    )
+
+                actions.append(getattr(RoleModel, field).set(value))
 
         condition = (RoleModel.role_id == kwargs.get("role_id")) & (
             RoleModel.apply_to == str(channel).strip()
@@ -962,6 +973,53 @@ def check_user_permissions(
         return False
     except Exception as e:
         raise e
+
+
+def _get_unvisible_permissions(channel, permissions):
+    resources = {}
+    results = Utility.json_loads(
+        Utility.json_dumps(
+            [
+                resource
+                for resource in ResourceModel.scan(
+                    filter_condition=ResourceModel.apply_to == str(channel).strip()
+                )
+            ]
+        )
+    )
+
+    for resource in results:
+        operations = []
+
+        for operation, items in resource.get("operations", {}).items():
+            for item in items:
+                if item.get("visible") == False:
+                    operations.append(
+                        {
+                            "operation_name": item.get("action"),
+                            "operation": str(operation).strip(),
+                            "exclude": [],
+                        }
+                    )
+
+        if len(operations):
+            resources[resource.get("resource_id")] = operations
+
+    for rule in permissions:
+        if rule.get("resource_id") and resources.get(rule.get("resource_id")):
+            rule["permissions"] += resources.get(rule.get("resource_id"))
+            resources.pop(rule.get("resource_id"))
+
+    if len(resources):
+        for resource_id, items in resources.items():
+            permissions.append(
+                {
+                    "resource_id": resource_id,
+                    "permissions": items,
+                }
+            )
+
+    return permissions
 
 
 def add_resource():
