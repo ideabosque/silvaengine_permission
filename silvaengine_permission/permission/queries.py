@@ -137,7 +137,14 @@ def resolve_roles(info, **kwargs):
             items=roles,
             page_number=page_number,
             page_size=arguments.get("limit"),
-            total=pagination_results.total_count,
+            total=len(
+                [
+                    role.role_id
+                    for role in RoleModel.scan(
+                        filter_condition=arguments.get("filter_condition")
+                    )
+                ]
+            ),
         )
     except Exception as e:
         raise e
