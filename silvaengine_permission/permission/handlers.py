@@ -237,8 +237,6 @@ def create_relationship_handler(channel, operator_id, kwargs):
                     "status": bool(kwargs.get("status", True)),
                 },
             ).save()
-
-        print("Save successful:", relationship_id)
         return RelationshipModel.get(relationship_id)
     except Exception as e:
         raise e
@@ -292,8 +290,6 @@ def delete_relationship_handler(channel, relationship_id):
             raise Exception("`relationshipId` is required", 400)
 
         # Delete the group/user/role relationship.
-        print("DELETE RELATIONSHIP >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-        print(relationship_id)
         return RelationshipModel(relationship_id).delete()
     except Exception as e:
         raise e
@@ -463,7 +459,6 @@ def get_user_permissions(authorizer, channel):
 
             function_name = getattr(resource, "function")
             # operations = getattr(resource, "operations")
-            # print(operations)
 
             if not result.get(function_name):
                 result[function_name] = []
@@ -830,11 +825,7 @@ def delete_relationships_by_condition(
             for condition in filter_conditions:
                 filter_condition = filter_condition & (condition)
 
-        print(
-            "DELETE RELATIONSHIP BY CONDITION >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-        )
         for relationship in RelationshipModel.scan(filter_condition=filter_condition):
-            print(relationship)
             relationship.delete()
 
         return True
@@ -1024,5 +1015,4 @@ def _get_unvisible_permissions(channel, permissions):
 
 def add_resource():
     with open("f:\install.log", "a") as fd:
-        print("mtest")
         fd.write("Test\n")
