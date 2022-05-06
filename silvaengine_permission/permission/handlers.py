@@ -402,7 +402,9 @@ def get_roles(user_id, channel, is_admin, group_id):
 
 
 # Get a list of resource permissions for a specified user
-def get_user_permissions(authorizer, channel):
+def get_user_permissions(authorizer, channel, group_id=None):
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    print(authorizer, channel)
     try:
         if not authorizer or not channel:
             raise Exception("Missing required parameter(s)")
@@ -413,14 +415,25 @@ def get_user_permissions(authorizer, channel):
         if not user_id:
             return None
 
+        print("User ID:::::", user_id)
+
         # Query user / group / role relationships
+        filter_conditions = (RelationshipModel.user_id == user_id) & (
+            RelationshipModel.apply_to == str(channel).strip()
+        )
+
+        if group_id:
+            filter_conditions = filter_conditions & (
+                RelationshipModel.group_id == str(group_id).strip()
+            )
+
         role_ids = [
             relationship.role_id
-            for relationship in RelationshipModel.scan(
-                (RelationshipModel.user_id == user_id)
-                & (RelationshipModel.apply_to == str(channel).strip())
-            )
+            for relationship in RelationshipModel.scan(filter_conditions)
         ]
+
+        print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+        print(role_ids)
 
         if len(role_ids) < 1:
             return None

@@ -19,7 +19,7 @@ __author__ = "bl"
 class BaseModel(Model):
     class Meta:
         billing_mode = "PAY_PER_REQUEST"
-        region = os.getenv("REGIONNAME", "us-east-1")
+        region = os.getenv("REGIONNAME", "us-west-2")
         aws_access_key_id = os.getenv("aws_access_key_id")
         aws_secret_access_key = os.getenv("aws_secret_access_key")
 
