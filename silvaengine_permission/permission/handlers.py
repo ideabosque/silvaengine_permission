@@ -479,19 +479,14 @@ def get_user_permissions(authorizer, channel, group_id=None):
 
             if type(rule.permissions):
                 for permission in rule.permissions:
-                    if (
-                        permission.operation
-                        and permission.operation_name
-                        and permission.operation != ""
-                        and permission.operation_name != ""
-                    ):
+                    if permission.operation and permission.operation_name:
                         # action = permission.operation.strip().lower()
 
                         # if not result.get(function_name).get(action):
                         #     result[function_name][action] = []
 
                         result[function_name].append(
-                            permission.operation_name.strip().lower()
+                            str(permission.operation_name).strip().lower()
                         )
 
                         # result[function_name][action].append(
