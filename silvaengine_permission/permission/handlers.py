@@ -670,6 +670,7 @@ def get_roles_by_user_id(
                 user_roles[uid][gid] = {
                     "relationship_type": relationship.type,
                     "roles": [roles.get(rid)] if roles.get(rid) else [],
+                    "group_id": gid,
                 }
             elif roles.get(rid):
                 user_roles[uid][gid]["roles"].append(roles.get(rid))
