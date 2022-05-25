@@ -395,7 +395,12 @@ def get_roles(user_id, channel, is_admin, group_id):
             raise Exception("The current user is not assigned any role", 403)
 
         return Utility.json_dumps(
-            [role for role in RoleModel.scan(RoleModel.role_id.is_in(*role_ids))]
+            [
+                role
+                for role in RoleModel.scan(
+                    RoleModel.role_id.is_in(*list(set(role_ids)))
+                )
+            ]
         )
     except Exception as e:
         raise e
@@ -442,7 +447,7 @@ def get_user_permissions(authorizer, channel, group_id=None):
         result = {}
 
         for role in RoleModel.scan(
-            (RoleModel.role_id.is_in(*role_ids))
+            (RoleModel.role_id.is_in(*list(set(role_ids))))
             & (RoleModel.apply_to == str(channel).strip())
         ):
             rules += role.permissions
