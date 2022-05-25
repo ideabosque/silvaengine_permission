@@ -592,22 +592,67 @@ def get_roles_by_user_id(
 
     arguments = {
         "limit": None,
-        "filter_condition": (RelationshipModel.user_id == str(user_id).strip())
-        & (RelationshipModel.type == int(relationship_type))
+        "filter_condition": (RelationshipModel.type == int(relationship_type))
         & (RelationshipModel.apply_to == str(channel).strip()),
     }
+
+    if type(user_id) is list and len(user_id):
+        arguments["filter_condition"] = arguments["filter_condition"] & (
+            RelationshipModel.user_id.is_in(*list(set(user_id)))
+        )
+    else:
+        arguments["filter_condition"] = arguments["filter_condition"] & (
+            RelationshipModel.user_id == str(user_id).strip()
+        )
 
     if group_id and str(group_id).strip() != "":
         arguments["filter_condition"] = arguments["filter_condition"] & (
             RelationshipModel.group_id == str(group_id).strip()
         )
 
+    # 2. Get role ids.
     role_ids = []
-    group_roles = {}
+    relationships = []
 
     for relationship in RelationshipModel.scan(**arguments):
+        relationships.append(relationship)
+
+        if relationship.role_id and str(relationship.role_id).strip() not in role_ids:
+            role_ids.append(str(relationship.role_id).strip())
+
+    # 3. Get roles
+    roles = {}
+
+    if len(role_ids):
+        # @TODO: If role_ids more than 100, will be failure.
+        role_ids = list(set(role_ids))
+
+        for ids in [role_ids[i : i + 90] for i in range(0, len(role_ids), 90)]:
+            for role in RoleModel.scan(
+                (RoleModel.role_id.is_in(*ids))
+                & (RoleModel.apply_to == str(channel).strip())
+            ):
+                role = Utility.json_loads(
+                    Utility.json_dumps(role.__dict__["attribute_values"])
+                )
+
+                if role.get("permissions") and ignore_permissions:
+                    del role["permissions"]
+
+                if role.get("role_id") and role.get("name"):
+                    roles[role.get("role_id")] = {
+                        "name": role.get("name"),
+                        "id": role.get("role_id"),
+                        "type": role.get("type"),
+                    }
+
+    # 4. Get user roles.
+    user_roles = {}
+
+    for relationship in relationships:
         if relationship.role_id:
             rid = str(relationship.role_id).strip()
+            uid = str(relationship.user_id).strip()
             gid = (
                 str(relationship.group_id).strip()
                 if relationship.group_id
@@ -615,48 +660,36 @@ def get_roles_by_user_id(
                 else str(RoleType.NORMAL.name).strip().lower()
             )
 
-            if not rid in role_ids:
-                role_ids.append(rid)
+            # if not rid in role_ids:
+            #     role_ids.append(rid)
 
-            if group_roles.get(gid) is None:
-                group_roles[gid] = {"type": relationship.type, "role_ids": [rid]}
-            else:
-                group_roles[gid]["role_ids"].append(rid)
+            if not user_roles.get(uid):
+                user_roles[uid] = {}
 
-    if len(role_ids):
-        roles = {}
-
-        # @TODO: If role_ids more than 100, will be failure.
-        for role in RoleModel.scan(
-            (RoleModel.role_id.is_in(*list(set(role_ids))))
-            & (RoleModel.apply_to == str(channel).strip())
-        ):
-            role = Utility.json_loads(
-                Utility.json_dumps(role.__dict__["attribute_values"])
-            )
-
-            if role.get("permissions") and ignore_permissions:
-                del role["permissions"]
-
-            if role.get("role_id") and role.get("name"):
-                roles[role.get("role_id")] = {
-                    "name": role.get("name"),
-                    "id": role.get("role_id"),
-                    "type": role.get("type"),
+            if not user_roles.get(uid, {}).get(gid):
+                user_roles[uid][gid] = {
+                    "relationship_type": relationship.type,
+                    "roles": [roles.get(rid)] if roles.get(rid) else [],
                 }
+            elif roles.get(rid):
+                user_roles[uid][gid]["roles"].append(roles.get(rid))
 
-        for gid, value in group_roles.items():
-            group_roles[gid] = {
-                "group_id": gid,
-                "relationship_type": value.get("type"),
-                "roles": [
-                    roles.get(rid)
-                    for rid in list(set(value.get("role_ids")))
-                    if roles.get(rid)
-                ],
-            }
+        # for uid, group in user_roles.items():
+        #     for gid, value in group.items():
+        #         user_roles[uid][gid] = {
+        #             "group_id": gid,
+        #             "relationship_type": value.get("type"),
+        #             "roles": [
+        #                 roles.get(rid)
+        #                 for rid in list(set(value.get("role_ids")))
+        #                 if roles.get(rid)
+        #             ],
+        #         }
 
-    return group_roles.values()
+    if type(user_id) is not list and user_roles.get(str(user_id).strip()):
+        return user_roles.get(str(user_id).strip()).values()
+
+    return user_roles
 
 
 # Obtain user roles according to the specified user ID
