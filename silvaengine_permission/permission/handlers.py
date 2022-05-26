@@ -2,16 +2,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from datetime import datetime
-from hashlib import md5
-from importlib.util import find_spec
-from importlib import import_module
 from silvaengine_utility import Utility
 from silvaengine_resource import ResourceModel
-from pynamodb.transactions import TransactWrite
-from pynamodb.connection import Connection
 from .models import RelationshipModel, RoleModel
 from .enumerations import RoleRelationshipType, RoleType
-import uuid
+import uuid, pendulum
 
 
 # Create role
@@ -408,8 +403,6 @@ def get_roles(user_id, channel, is_admin, group_id):
 
 # Get a list of resource permissions for a specified user
 def get_user_permissions(authorizer, channel, group_id=None):
-    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    print(authorizer, channel)
     try:
         if not authorizer or not channel:
             raise Exception("Missing required parameter(s)")
@@ -419,8 +412,6 @@ def get_user_permissions(authorizer, channel, group_id=None):
 
         if not user_id:
             return None
-
-        print("User ID:::::", user_id)
 
         # Query user / group / role relationships
         filter_conditions = (RelationshipModel.user_id == user_id) & (
@@ -436,9 +427,6 @@ def get_user_permissions(authorizer, channel, group_id=None):
             relationship.role_id
             for relationship in RelationshipModel.scan(filter_conditions)
         ]
-
-        print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-        print(role_ids)
 
         if len(role_ids) < 1:
             return None
@@ -476,31 +464,17 @@ def get_user_permissions(authorizer, channel, group_id=None):
                 continue
 
             function_name = getattr(resource, "function")
-            # operations = getattr(resource, "operations")
 
             if not result.get(function_name):
                 result[function_name] = []
-                # result[function_name] = {}
 
             if type(rule.permissions):
                 for permission in rule.permissions:
                     if permission.operation and permission.operation_name:
-                        # action = permission.operation.strip().lower()
-
-                        # if not result.get(function_name).get(action):
-                        #     result[function_name][action] = []
-
                         result[function_name].append(
                             str(permission.operation_name).strip().lower()
                         )
 
-                        # result[function_name][action].append(
-                        #     permission.operation_name.strip().lower()
-                        # )
-
-                        # result[function_name][action] = list(
-                        #     set(result[function_name][action])
-                        # )
             result[function_name] = list(set(result[function_name]))
 
         return result
@@ -696,8 +670,17 @@ def get_roles_by_user_id(
 # Obtain user roles according to the specified user ID
 # relationship_type: 0 - team, 1 - seller
 def get_users_by_role_type(
-    role_types, channel, settings, relationship_type=0, group_ids=None
+    role_types,
+    channel,
+    settings,
+    relationship_type=0,
+    group_ids=None,
 ) -> list:
+    t = lambda: int(pendulum.now().timestamp() * 1000)
+    s = t()
+    f = s
+    print(">>>>>>>>>>>>>>> START: {}".format(s))
+
     if (
         (type(role_types) is not list and len(role_types))
         or not channel
@@ -705,89 +688,180 @@ def get_users_by_role_type(
     ):
         return []
 
+    # 1. Get callback function.
+    fn_get_users = Utility.import_dynamically(
+        "user_engine",
+        "get_users_by_ids",
+        "UserEngine",
+        {"logger": None, **settings},
+    )
+
+    if not callable(fn_get_users):
+        raise Exception("Module is not exists or the function is uncallable", 500)
+
+    print(">>>>>>>>>>>>>>> Get callback function: {}".format(t() - s))
+    s = t()
+
+    # 2. Get roles
     role_types = list(set([int(role_type) for role_type in role_types]))
 
     if type(group_ids) is list and len(group_ids):
         group_ids = list(set([str(group_id).strip() for group_id in group_ids]))
 
-    filter_condition = (
+    role_filter_condition = (
         (RoleModel.is_admin == True)
         & (RoleModel.apply_to == str(channel).strip())
         & (RoleModel.status == True)
         & (RoleModel.type.is_in(*role_types))
     )
-    roles_result_iterator = RoleModel.scan(filter_condition=filter_condition)
-    roles = []
-
-    for role in roles_result_iterator:
-        item = Utility.json_loads(Utility.json_dumps(role.__dict__["attribute_values"]))
-        filter_condition = (
-            (RelationshipModel.role_id == role.role_id)
-            & (RelationshipModel.type == int(relationship_type))
-            & (RelationshipModel.apply_to == str(channel).strip())
+    roles = Utility.json_loads(
+        Utility.json_dumps(
+            {
+                role.role_id: role
+                for role in RoleModel.scan(filter_condition=role_filter_condition)
+            }
         )
+    )
 
-        if item.get("permissions"):
-            del item["permissions"]
+    if not len(roles):
+        raise Exception("No roles", 500)
 
-        relationships = [
-            Utility.json_loads(Utility.json_dumps(user.__dict__["attribute_values"]))
-            for user in RelationshipModel.scan(filter_condition=filter_condition)
-        ]
+    print(">>>>>>>>>>>>>>> Get roles: {}".format(t() - s))
+    s = t()
 
-        if len(relationships):
-            user_ids = list(
-                set(
-                    [
-                        str(relationship.get("user_id")).strip()
-                        for relationship in relationships
-                    ]
+    # 3. Get relationships & user ids.
+    relationship_filter_condition = (
+        (RelationshipModel.role_id.is_in(*list(set(roles.keys()))))
+        & (RelationshipModel.type == int(relationship_type))
+        & (RelationshipModel.apply_to == str(channel).strip())
+    )
+    relationships = Utility.json_loads(
+        Utility.json_dumps(
+            [
+                relationship
+                for relationship in RelationshipModel.scan(
+                    filter_condition=relationship_filter_condition
                 )
-            )
-            users = {}
-            response = {}
+            ]
+        )
+    )
 
-            if len(user_ids):
-                method = Utility.import_dynamically(
-                    "user_engine",
-                    "get_users_by_ids",
-                    "UserEngine",
-                    {"logger": None, **settings},
-                )
+    print(">>>>>>>>>>>>>>> Get relationships: {}".format(t() - s))
+    s = t()
 
-                if not callable(method):
-                    raise Exception(
-                        "Module is not exists or the function is uncallable", 500
-                    )
+    user_ids = [relationship.get("user_id") for relationship in relationships]
+    users = {}
 
-                users = method(user_ids=user_ids, settings=settings)
+    if len(user_ids):
+        users = fn_get_users(user_ids=list(set(user_ids)), settings=settings)
 
-            for relationship in relationships:
-                if (
-                    type(group_ids) is list
-                    and len(group_ids)
-                    and relationship.get("group_id")
-                    and not str(relationship.get("group_id")).strip() in group_ids
-                ):
-                    continue
+    print(">>>>>>>>>>>>>>> Get users: {}".format(t() - s))
+    s = t()
 
-                if relationship.get("user_id") and users.get(
-                    relationship.get("user_id")
-                ):
-                    relationship.update(
-                        {"user_base_info": users.get(relationship.get("user_id"))}
-                    )
+    # 4. User relations
+    role_users = {}
 
-                if relationship.get("group_id"):
-                    if not response.get(relationship.get("group_id")):
-                        response.update({relationship.get("group_id"): []})
+    for relationship in relationships:
+        if (
+            type(group_ids) is list
+            and len(group_ids)
+            and relationship.get("group_id")
+            and not str(relationship.get("group_id")).strip() in group_ids
+        ):
+            continue
 
-                    response[relationship.get("group_id")].append(relationship)
+        user_id = str(relationship.get("user_id")).strip()
+        role_id = str(relationship.get("role_id")).strip()
+        group_id = str(relationship.get("group_id")).strip()
 
-            item.update({"groups": response})
-            roles.append(item)
+        if user_id and users.get(user_id):
+            relationship["user_base_info"] = users.get(user_id)
 
-    return roles
+        if role_id and not role_users.get(role_id):
+            role_users.update({role_id: {}})
+
+        if group_id:
+            if not role_users.get(role_id).get(group_id):
+                role_users[role_id].update({group_id: []})
+
+            role_users[role_id][group_id].append(relationship)
+
+    print(">>>>>>>>>>>>>>> Get user relationships: {}".format(t() - s))
+    s = t()
+
+    # 5. Result
+    results = []
+
+    for role_id, role in roles.items():
+        if role.get("permissions"):
+            # role.permissions = []
+            del role["permissions"]
+
+        if role_users.get(str(role_id).strip()):
+            # role.update({"groups": role_users.get(str(role_id).strip())})
+            role["groups"] = role_users.get(str(role_id).strip())
+            results.append(role)
+
+    print(">>>>>>>>>>>>>>> Result: {}".format(t() - s))
+    print(">>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
+
+    # for role in roles_result_iterator:
+    #     item = Utility.json_loads(Utility.json_dumps(role.__dict__["attribute_values"]))
+    #     filter_condition = (
+    #         (RelationshipModel.role_id == role.role_id)
+    #         & (RelationshipModel.type == int(relationship_type))
+    #         & (RelationshipModel.apply_to == str(channel).strip())
+    #     )
+
+    #     if item.get("permissions"):
+    #         del item["permissions"]
+
+    #     relationships = [
+    #         Utility.json_loads(Utility.json_dumps(user.__dict__["attribute_values"]))
+    #         for user in RelationshipModel.scan(filter_condition=filter_condition)
+    #     ]
+
+    #     if len(relationships):
+    #         user_ids = list(
+    #             set(
+    #                 [
+    #                     str(relationship.get("user_id")).strip()
+    #                     for relationship in relationships
+    #                 ]
+    #             )
+    #         )
+    #         users = {}
+    #         response = {}
+
+    #         if len(user_ids):
+    #             users = fn_get_users(user_ids=user_ids, settings=settings)
+
+    #         for relationship in relationships:
+    #             if (
+    #                 type(group_ids) is list
+    #                 and len(group_ids)
+    #                 and relationship.get("group_id")
+    #                 and not str(relationship.get("group_id")).strip() in group_ids
+    #             ):
+    #                 continue
+
+    #             if relationship.get("user_id") and users.get(
+    #                 relationship.get("user_id")
+    #             ):
+    #                 relationship.update(
+    #                     {"user_base_info": users.get(relationship.get("user_id"))}
+    #                 )
+
+    #             if relationship.get("group_id"):
+    #                 if not response.get(relationship.get("group_id")):
+    #                     response.update({relationship.get("group_id"): []})
+
+    #                 response[relationship.get("group_id")].append(relationship)
+
+    #         item.update({"groups": response})
+    #         roles.append(item)
+
+    return results
 
 
 def get_roles_by_type(types, channel, status=None, is_admin=None) -> dict:

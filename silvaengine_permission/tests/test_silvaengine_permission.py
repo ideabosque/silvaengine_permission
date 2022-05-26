@@ -204,7 +204,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
-    # @unittest.skip("demonstrating skipping")
+    @unittest.skip("demonstrating skipping")
     def test_create_role(self):
         mutation = """
             mutation createRole(
@@ -818,10 +818,22 @@ class SilvaEngineAuthTest(unittest.TestCase):
         )
         print("Response:", response)
 
-    @unittest.skip("demonstrating skipping")
+    # @unittest.skip("demonstrating skipping")
     def test_get_users(self):
+        database_session = Utility.create_database_session(setting)
+
+        setting.update(
+            {
+                "database_session": database_session,
+            }
+        )
+
         response = self.instance.get_users_by_role_type(
-            role_types=[2], relationship_type=1, ids=[2018]
+            channel="ss3",
+            settings=setting,
+            role_types=[2],
+            relationship_type=1,
+            ids=[2018],
         )
         print("Response:", response)
 
