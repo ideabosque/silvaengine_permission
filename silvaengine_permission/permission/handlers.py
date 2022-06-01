@@ -148,8 +148,9 @@ def create_relationship_handler(channel, operator_id, kwargs):
         relationship_id = str(uuid.uuid1())
         now = datetime.utcnow()
         filter_conditions = (
-            (RelationshipModel.apply_to == str(channel).strip())
-            & (RelationshipModel.type == int(kwargs.get("relationship_type", 0)))
+            # (RelationshipModel.apply_to == str(channel).strip())
+            # &
+            (RelationshipModel.type == int(kwargs.get("relationship_type", 0)))
             & (RelationshipModel.user_id == str(kwargs.get("user_id")).strip())
             & (RelationshipModel.role_id == str(kwargs.get("role_id")).strip())
             & (RelationshipModel.group_id == str(kwargs.get("group_id")).strip())
@@ -158,8 +159,10 @@ def create_relationship_handler(channel, operator_id, kwargs):
             set(
                 [
                     str(item.relationship_id).strip()
-                    for item in RelationshipModel.scan(
-                        filter_condition=filter_conditions
+                    # for item in RelationshipModel.scan(
+                    for item in RelationshipModel.apply_to_relationship_id_index.query(
+                        hash_key=str(channel).strip(),
+                        filter_condition=filter_conditions,
                     )
                 ]
             )
@@ -558,7 +561,11 @@ def check_permission(roles, resource) -> bool:
 
 # Obtain user roles according to the specified user ID
 def get_roles_by_user_id(
-    user_id, relationship_type, channel, group_id=None, ignore_permissions=True
+    user_id,
+    relationship_type,
+    channel,
+    group_id=None,
+    ignore_permissions=True,
 ):
     # 1. If user or relationship type is empty
     if not user_id or relationship_type is None or not channel:
@@ -566,8 +573,9 @@ def get_roles_by_user_id(
 
     arguments = {
         "limit": None,
-        "filter_condition": (RelationshipModel.type == int(relationship_type))
-        & (RelationshipModel.apply_to == str(channel).strip()),
+        "hash_key": str(channel).strip(),
+        "filter_condition": (RelationshipModel.type == int(relationship_type)),
+        # & (RelationshipModel.apply_to == str(channel).strip()),
     }
 
     if type(user_id) is list and len(user_id):
@@ -588,7 +596,10 @@ def get_roles_by_user_id(
     role_ids = []
     relationships = []
 
-    for relationship in RelationshipModel.scan(**arguments):
+    # for relationship in RelationshipModel.scan(**arguments):
+    for relationship in RelationshipModel.apply_to_relationship_id_index.query(
+        **arguments
+    ):
         relationships.append(relationship)
 
         if relationship.role_id and str(relationship.role_id).strip() not in role_ids:
@@ -733,14 +744,25 @@ def get_users_by_role_type(
     relationship_filter_condition = (
         (RelationshipModel.role_id.is_in(*list(set(roles.keys()))))
         & (RelationshipModel.type == int(relationship_type))
-        & (RelationshipModel.apply_to == str(channel).strip())
+        # & (RelationshipModel.apply_to == str(channel).strip())
     )
+    # relationships = Utility.json_loads(
+    #     Utility.json_dumps(
+    #         [
+    #             relationship
+    #             for relationship in RelationshipModel.scan(
+    #                 filter_condition=relationship_filter_condition
+    #             )
+    #         ]
+    #     )
+    # )
     relationships = Utility.json_loads(
         Utility.json_dumps(
             [
                 relationship
-                for relationship in RelationshipModel.scan(
-                    filter_condition=relationship_filter_condition
+                for relationship in RelationshipModel.apply_to_relationship_id_index.query(
+                    hash_key=str(channel).strip(),
+                    filter_condition=relationship_filter_condition,
                 )
             ]
         )

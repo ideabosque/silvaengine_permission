@@ -11,6 +11,7 @@ from pynamodb.attributes import (
     UTCDateTimeAttribute,
     NumberAttribute,
 )
+from pynamodb.indexes import GlobalSecondaryIndex, LocalSecondaryIndex, AllProjection
 import os
 
 __author__ = "bl"
@@ -74,11 +75,27 @@ class RoleModel(TraitModel):
     status = BooleanAttribute(default=True)
 
 
+class ApplyToRelationshipIdIndex(GlobalSecondaryIndex):
+    """
+    This class represents a local secondary index
+    """
+
+    class Meta:
+        billing_mode = "PAY_PER_REQUEST"
+        # All attributes are projected
+        projection = AllProjection()
+        index_name = "apply_to-relationship_id-index"
+
+    apply_to = UnicodeAttribute(hash_key=True)
+    relationship_id = UnicodeAttribute(range_key=True)
+
+
 class RelationshipModel(TraitModel):
     class Meta(TraitModel.Meta):
         table_name = "se-relationships"
 
     relationship_id = UnicodeAttribute(hash_key=True)
+    apply_to_relationship_id_index = ApplyToRelationshipIdIndex()
     apply_to = UnicodeAttribute()
     # type: 0 - amdin, 1 - Seller, 2 - team
     type = NumberAttribute(default=0)
