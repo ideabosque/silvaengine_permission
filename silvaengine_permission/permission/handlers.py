@@ -766,7 +766,7 @@ def get_users_by_role_type(
     results = RelationshipModel.apply_to_type_index.query(
         hash_key=str(channel).strip(),
         range_key_condition=(RelationshipModel.type == int(relationship_type)),
-        # filter_condition=relationship_filter_condition,
+        filter_condition=relationship_filter_condition,
     )
     test = [relationship for relationship in results]
     print(">>>>>>>>>>>>>>> Get relationships 11111111111: {}".format(t() - s))
