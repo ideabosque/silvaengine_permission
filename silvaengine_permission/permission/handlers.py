@@ -6,7 +6,7 @@ from silvaengine_utility import Utility
 from silvaengine_resource import ResourceModel
 from .models import RelationshipModel, RoleModel
 from .enumerations import RoleRelationshipType, RoleType
-import uuid, pendulum
+import uuid, pendulum, orjson
 
 
 # Create role
@@ -764,7 +764,11 @@ def get_users_by_role_type(
     #     )
     # )
     relationships = [
-        Utility.convert_object_to_dict(relationship)
+        orjson.loads(
+            orjson.dumps(
+                relationship, option=orjson.OPT_NAIVE_UTC | orjson.OPT_SERIALIZE_NUMPY
+            )
+        )
         for relationship in RelationshipModel.apply_to_type_index.query(
             hash_key=str(channel).strip(),
             range_key_condition=(RelationshipModel.type == int(relationship_type)),
