@@ -319,7 +319,7 @@ def save_relationships_handler(channel, operator_id, relationships):
 
             filter_conditions = (
                 (RelationshipModel.type == int(relationship.get("type", 0)))
-                & (RelationshipModel.apply_to == str(channel).strip())
+                # & (RelationshipModel.apply_to == str(channel).strip())
                 & (
                     RelationshipModel.user_id
                     == str(relationship.get("user_id")).strip()
@@ -332,7 +332,9 @@ def save_relationships_handler(channel, operator_id, relationships):
                     == str(relationship.get("group_id")).strip()
                 )
 
-            for item in RelationshipModel.scan(filter_condition=filter_conditions):
+            for item in RelationshipModel.apply_to_relationship_id_index.query(
+                hash_key=str(channel).strip(), filter_condition=filter_conditions
+            ):
                 delete_relationship_handler(
                     channel=channel,
                     relationship_id=str(item.relationship_id).strip(),
@@ -371,12 +373,10 @@ def get_roles(user_id, channel, is_admin, group_id):
             raise Exception("Unrecognized request origin", 401)
 
         # Check user's permissions
-        filter_conditions = (RelationshipModel.user_id == str(user_id).strip()) & (
-            RelationshipModel.apply_to == str(channel).strip()
-        )
+        filter_conditions = RelationshipModel.user_id == str(user_id).strip()
 
         if not is_admin and group_id:
-            filter_conditions = filter_conditions & (
+            filter_conditions = (filter_conditions) & (
                 RelationshipModel.group_id == group_id
             )
 
@@ -384,7 +384,10 @@ def get_roles(user_id, channel, is_admin, group_id):
             set(
                 [
                     str(relationship.role_id).strip()
-                    for relationship in RelationshipModel.scan(filter_conditions)
+                    for relationship in RelationshipModel.apply_to_relationship_id_index.query(
+                        hash_key=str(channel).strip(),
+                        filter_condition=filter_conditions,
+                    )
                 ]
             )
         )
@@ -417,18 +420,19 @@ def get_user_permissions(authorizer, channel, group_id=None):
             return None
 
         # Query user / group / role relationships
-        filter_conditions = (RelationshipModel.user_id == user_id) & (
-            RelationshipModel.apply_to == str(channel).strip()
-        )
+        filter_conditions = RelationshipModel.user_id == user_id
 
         if group_id:
-            filter_conditions = filter_conditions & (
+            filter_conditions = (filter_conditions) & (
                 RelationshipModel.group_id == str(group_id).strip()
             )
 
         role_ids = [
             relationship.role_id
-            for relationship in RelationshipModel.scan(filter_conditions)
+            for relationship in RelationshipModel.apply_to_relationship_id_index.query(
+                hash_key=str(channel).strip(),
+                filter_condition=filter_conditions,
+            )
         ]
 
         if len(role_ids) < 1:
