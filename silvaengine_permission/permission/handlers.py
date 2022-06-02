@@ -871,62 +871,6 @@ def get_users_by_role_type(
     print(">>>>>>>>>>>>>>> Result: {}".format(t() - s))
     print(">>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
 
-    # for role in roles_result_iterator:
-    #     item = Utility.json_loads(Utility.json_dumps(role.__dict__["attribute_values"]))
-    #     filter_condition = (
-    #         (RelationshipModel.role_id == role.role_id)
-    #         & (RelationshipModel.type == int(relationship_type))
-    #         & (RelationshipModel.apply_to == str(channel).strip())
-    #     )
-
-    #     if item.get("permissions"):
-    #         del item["permissions"]
-
-    #     relationships = [
-    #         Utility.json_loads(Utility.json_dumps(user.__dict__["attribute_values"]))
-    #         for user in RelationshipModel.scan(filter_condition=filter_condition)
-    #     ]
-
-    #     if len(relationships):
-    #         user_ids = list(
-    #             set(
-    #                 [
-    #                     str(relationship.get("user_id")).strip()
-    #                     for relationship in relationships
-    #                 ]
-    #             )
-    #         )
-    #         users = {}
-    #         response = {}
-
-    #         if len(user_ids):
-    #             users = fn_get_users(user_ids=user_ids, settings=settings)
-
-    #         for relationship in relationships:
-    #             if (
-    #                 type(group_ids) is list
-    #                 and len(group_ids)
-    #                 and relationship.get("group_id")
-    #                 and not str(relationship.get("group_id")).strip() in group_ids
-    #             ):
-    #                 continue
-
-    #             if relationship.get("user_id") and users.get(
-    #                 relationship.get("user_id")
-    #             ):
-    #                 relationship.update(
-    #                     {"user_base_info": users.get(relationship.get("user_id"))}
-    #                 )
-
-    #             if relationship.get("group_id"):
-    #                 if not response.get(relationship.get("group_id")):
-    #                     response.update({relationship.get("group_id"): []})
-
-    #                 response[relationship.get("group_id")].append(relationship)
-
-    #         item.update({"groups": response})
-    #         roles.append(item)
-
     return results
 
 
