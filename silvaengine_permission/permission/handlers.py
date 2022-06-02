@@ -764,11 +764,12 @@ def get_users_by_role_type(
     #     )
     # )
     relationships = [
-        orjson.loads(
-            orjson.dumps(
-                relationship, option=orjson.OPT_NAIVE_UTC | orjson.OPT_SERIALIZE_NUMPY
-            )
-        )
+        # orjson.loads(
+        #     orjson.dumps(
+        #         relationship, option=orjson.OPT_NAIVE_UTC | orjson.OPT_SERIALIZE_NUMPY
+        #     )
+        # )
+        Utility.convert_object_to_dict(relationship)
         for relationship in RelationshipModel.apply_to_type_index.query(
             hash_key=str(channel).strip(),
             range_key_condition=(RelationshipModel.type == int(relationship_type)),
