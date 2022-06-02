@@ -586,20 +586,37 @@ def get_roles_by_user_id(
         # "filter_condition": (RelationshipModel.type == int(relationship_type)),
         # & (RelationshipModel.apply_to == str(channel).strip()),
     }
+    filter_conditions = []
 
     if type(user_id) is list and len(user_id):
-        arguments["filter_condition"] = arguments["filter_condition"] & (
-            RelationshipModel.user_id.is_in(*list(set(user_id)))
-        )
+        # arguments["filter_condition"] = arguments["filter_condition"] & (
+        #     RelationshipModel.user_id.is_in(*list(set(user_id)))
+        # )
+        filter_conditions.append(RelationshipModel.user_id.is_in(*list(set(user_id))))
     else:
-        arguments["filter_condition"] = arguments["filter_condition"] & (
-            RelationshipModel.user_id == str(user_id).strip()
-        )
+        # arguments["filter_condition"] = arguments["filter_condition"] & (
+        #     RelationshipModel.user_id == str(user_id).strip()
+        # )
+        filter_conditions.append(RelationshipModel.user_id == str(user_id).strip())
 
     if group_id and str(group_id).strip() != "":
-        arguments["filter_condition"] = arguments["filter_condition"] & (
-            RelationshipModel.group_id == str(group_id).strip()
-        )
+        # arguments["filter_condition"] = arguments["filter_condition"] & (
+        #     RelationshipModel.group_id == str(group_id).strip()
+        # )
+        filter_conditions.append(RelationshipModel.group_id == str(group_id).strip())
+
+    if len(filter_conditions):
+        arguments["filter_condition"] = filter_conditions.pop(0)
+
+        for index, condition in enumerate(filter_conditions):
+            if index < 1:
+                arguments["filter_condition"] = (arguments["filter_condition"]) & (
+                    condition
+                )
+            else:
+                arguments["filter_condition"] = arguments["filter_condition"] & (
+                    condition
+                )
 
     # 2. Get role ids.
     role_ids = []
