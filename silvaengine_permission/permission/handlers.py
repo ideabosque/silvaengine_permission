@@ -769,6 +769,8 @@ def get_users_by_role_type(
         # filter_condition=relationship_filter_condition,
     )
     test = [relationship for relationship in results]
+    print(">>>>>>>>>>>>>>> Get relationships 11111111111: {}".format(t() - s))
+    s = t()
     relationships = Utility.json_loads(Utility.json_dumps(test))
 
     print(">>>>>>>>>>>>>>> Get relationships: {}".format(t() - s))
