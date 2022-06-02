@@ -732,14 +732,18 @@ def get_users_by_role_type(
         & (RoleModel.status == True)
         & (RoleModel.type.is_in(*role_types))
     )
-    roles = Utility.json_loads(
-        Utility.json_dumps(
-            {
-                role.role_id: role
-                for role in RoleModel.scan(filter_condition=role_filter_condition)
-            }
-        )
-    )
+    # roles = Utility.json_loads(
+    #     Utility.json_dumps(
+    #         {
+    #             role.role_id: role
+    #             for role in RoleModel.scan(filter_condition=role_filter_condition)
+    #         }
+    #     )
+    # )
+    roles = {
+        role.role_id: role
+        for role in RoleModel.scan(filter_condition=role_filter_condition)
+    }
 
     if not len(roles):
         raise Exception("No roles", 500)
@@ -763,19 +767,24 @@ def get_users_by_role_type(
     #         ]
     #     )
     # )
-    relationships = [
-        # orjson.loads(
-        #     orjson.dumps(
-        #         relationship, option=orjson.OPT_NAIVE_UTC | orjson.OPT_SERIALIZE_NUMPY
-        #     )
-        # )
-        Utility.convert_object_to_dict(relationship)
-        for relationship in RelationshipModel.apply_to_type_index.query(
-            hash_key=str(channel).strip(),
-            range_key_condition=(RelationshipModel.type == int(relationship_type)),
-            filter_condition=relationship_filter_condition,
-        )
-    ]
+    # relationships = [
+    #     # orjson.loads(
+    #     #     orjson.dumps(
+    #     #         relationship, option=orjson.OPT_NAIVE_UTC | orjson.OPT_SERIALIZE_NUMPY
+    #     #     )
+    #     # )
+    #     Utility.convert_object_to_dict(relationship)
+    #     for relationship in RelationshipModel.apply_to_type_index.query(
+    #         hash_key=str(channel).strip(),
+    #         range_key_condition=(RelationshipModel.type == int(relationship_type)),
+    #         filter_condition=relationship_filter_condition,
+    #     )
+    # ]
+    relationships = RelationshipModel.apply_to_type_index.query(
+        hash_key=str(channel).strip(),
+        range_key_condition=(RelationshipModel.type == int(relationship_type)),
+        filter_condition=relationship_filter_condition,
+    )
     print(">>>>>>>>>>>>>>> Get relationships 11111111111: {}".format(t() - s))
     s = t()
     # relationships = Utility.json_loads(Utility.json_dumps(test))
@@ -783,7 +792,7 @@ def get_users_by_role_type(
     print(">>>>>>>>>>>>>>> Get relationships: {}".format(t() - s))
     s = t()
 
-    user_ids = [relationship.get("user_id") for relationship in relationships]
+    user_ids = [relationship.user_id for relationship in relationships]
     users = {}
 
     if len(user_ids):
@@ -799,17 +808,18 @@ def get_users_by_role_type(
         if (
             type(group_ids) is list
             and len(group_ids)
-            and relationship.get("group_id")
-            and not str(relationship.get("group_id")).strip() in group_ids
+            and relationship.group_id
+            and not str(relationship.group_id).strip() in group_ids
         ):
             continue
 
-        user_id = str(relationship.get("user_id")).strip()
-        role_id = str(relationship.get("role_id")).strip()
-        group_id = str(relationship.get("group_id")).strip()
+        user_id = str(relationship.user_id).strip()
+        role_id = str(relationship.role_id).strip()
+        group_id = str(relationship.group_id).strip()
 
         if user_id and users.get(user_id):
-            relationship["user_base_info"] = users.get(user_id)
+            setattr(relationship, "user_base_info", users.get(user_id))
+            # relationship["user_base_info"] = users.get(user_id)
 
         if role_id and not role_users.get(role_id):
             role_users.update({role_id: {}})
@@ -827,13 +837,18 @@ def get_users_by_role_type(
     results = []
 
     for role_id, role in roles.items():
-        if role.get("permissions"):
-            # role.permissions = []
-            del role["permissions"]
+        # if role.get("permissions"):
+        #     # role.permissions = []
+        #     del role["permissions"]
+        # if role.get("permissions"):
+        # role.permissions = []
+        # del role["permissions"]
+        setattr(role, "permissions", None)
 
         if role_users.get(str(role_id).strip()):
             # role.update({"groups": role_users.get(str(role_id).strip())})
-            role["groups"] = role_users.get(str(role_id).strip())
+            # role["groups"] = role_users.get(str(role_id).strip())
+            setattr(role, "groups", role_users.get(str(role_id).strip()))
             results.append(role)
 
     print(">>>>>>>>>>>>>>> Result: {}".format(t() - s))
