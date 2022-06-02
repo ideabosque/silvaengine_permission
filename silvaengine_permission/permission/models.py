@@ -75,7 +75,7 @@ class RoleModel(TraitModel):
     status = BooleanAttribute(default=True)
 
 
-class ApplyToRelationshipIdIndex(GlobalSecondaryIndex):
+class ApplyToTypeIndex(GlobalSecondaryIndex):
     """
     This class represents a local secondary index
     """
@@ -84,10 +84,10 @@ class ApplyToRelationshipIdIndex(GlobalSecondaryIndex):
         billing_mode = "PAY_PER_REQUEST"
         # All attributes are projected
         projection = AllProjection()
-        index_name = "apply_to-relationship_id-index"
+        index_name = "apply_to-type-index"
 
     apply_to = UnicodeAttribute(hash_key=True)
-    relationship_id = UnicodeAttribute(range_key=True)
+    type = NumberAttribute(range_key=True)
 
 
 class RelationshipModel(TraitModel):
@@ -95,7 +95,7 @@ class RelationshipModel(TraitModel):
         table_name = "se-relationships"
 
     relationship_id = UnicodeAttribute(hash_key=True)
-    apply_to_relationship_id_index = ApplyToRelationshipIdIndex()
+    apply_to_type_index = ApplyToTypeIndex()
     apply_to = UnicodeAttribute()
     # type: 0 - amdin, 1 - Seller, 2 - team
     type = NumberAttribute(default=0)
