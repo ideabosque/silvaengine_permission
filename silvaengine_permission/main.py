@@ -209,7 +209,12 @@ class Permission(object):
 
     # Get users
     def get_users_by_role_type(
-        self, channel, settings, role_types, relationship_type=0, ids=None
+        self,
+        channel,
+        settings,
+        role_types,
+        relationship_type=0,
+        ids=None,
     ) -> list:
         try:
             return get_users_by_role_type(

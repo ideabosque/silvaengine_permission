@@ -641,18 +641,27 @@ def get_roles_by_user_id(
                 (RoleModel.role_id.is_in(*ids))
                 & (RoleModel.apply_to == str(channel).strip())
             ):
-                role = Utility.json_loads(
-                    Utility.json_dumps(role.__dict__["attribute_values"])
-                )
+                # role = Utility.json_loads(
+                #     Utility.json_dumps(role.__dict__["attribute_values"])
+                # )
 
-                if role.get("permissions") and ignore_permissions:
-                    del role["permissions"]
+                # if role.get("permissions") and ignore_permissions:
+                #     del role["permissions"]
+                # if ignore_permissions:
+                #     setattr(role, "permissions", None)
 
-                if role.get("role_id") and role.get("name"):
-                    roles[role.get("role_id")] = {
-                        "name": role.get("name"),
-                        "id": role.get("role_id"),
-                        "type": role.get("type"),
+                # if role.get("role_id") and role.get("name"):
+                #     roles[role.get("role_id")] = {
+                #         "name": role.get("name"),
+                #         "id": role.get("role_id"),
+                #         "type": role.get("type"),
+                #     }
+
+                if role.role_id and role.name:
+                    roles[role.role_id] = {
+                        "name": role.name,
+                        "id": role.role_id,
+                        "type": role.type,
                     }
 
     # 4. Get user roles.
@@ -871,7 +880,7 @@ def get_users_by_role_type(
     print(">>>>>>>>>>>>>>> Result: {}".format(t() - s))
     print(">>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
 
-    return results
+    return orjson.loads(orjson.dumps(results))
 
 
 def get_roles_by_type(types, channel, status=None, is_admin=None) -> dict:

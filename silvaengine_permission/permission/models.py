@@ -12,7 +12,7 @@ from pynamodb.attributes import (
     NumberAttribute,
 )
 from pynamodb.indexes import GlobalSecondaryIndex, LocalSecondaryIndex, AllProjection
-import os
+import os, dataclasses
 
 __author__ = "bl"
 
@@ -60,6 +60,7 @@ class RoleConstraintMap(MapAttribute):
     permissions = ListAttribute(of=ResourceConstraintMap)
 
 
+@dataclasses
 class RoleModel(TraitModel):
     class Meta(TraitModel.Meta):
         table_name = "se-roles"
@@ -90,6 +91,7 @@ class ApplyToTypeIndex(GlobalSecondaryIndex):
     type = NumberAttribute(range_key=True)
 
 
+@dataclasses
 class RelationshipModel(TraitModel):
     class Meta(TraitModel.Meta):
         table_name = "se-relationships"
