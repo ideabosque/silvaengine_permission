@@ -6,7 +6,7 @@ from silvaengine_utility import Utility
 from silvaengine_resource import ResourceModel
 from .models import RelationshipModel, RoleModel
 from .enumerations import RoleRelationshipType, RoleType
-import uuid, pendulum, orjson
+import uuid, pendulum
 
 
 # Create role
@@ -880,7 +880,7 @@ def get_users_by_role_type(
     print(">>>>>>>>>>>>>>> Result: {}".format(t() - s))
     print(">>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
 
-    return orjson.loads(orjson.dumps(results))
+    return results
 
 
 def get_roles_by_type(types, channel, status=None, is_admin=None) -> dict:

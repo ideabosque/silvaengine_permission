@@ -12,7 +12,7 @@ from pynamodb.attributes import (
     NumberAttribute,
 )
 from pynamodb.indexes import GlobalSecondaryIndex, LocalSecondaryIndex, AllProjection
-import os, dataclasses
+import os
 
 __author__ = "bl"
 
