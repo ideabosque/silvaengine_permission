@@ -835,7 +835,7 @@ def get_users_by_role_type(
             type(group_ids) is list
             and len(group_ids)
             and relationship.group_id
-            and not str(relationship.group_id).strip() in group_ids
+            and str(relationship.group_id).strip() not in group_ids
         ):
             continue
 
@@ -851,10 +851,12 @@ def get_users_by_role_type(
             role_users.update({role_id: {}})
 
         if group_id:
-            if not role_users.get(role_id).get(group_id):
+            if not role_users.get(role_id, {}).get(group_id):
                 role_users[role_id].update({group_id: []})
 
             role_users[role_id][group_id].append(relationship)
+
+        print(relationship)
 
     print(">>>>>>>>>>>>>>> Get user relationships: {}".format(t() - s))
     s = t()
@@ -871,7 +873,11 @@ def get_users_by_role_type(
         # if role.get("permissions"):
         # role.permissions = []
         # del role["permissions"]
-        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", role_id, role_users.get(str(role_id).strip()))
+        print(
+            "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+            role_id,
+            role_users.get(str(role_id).strip()),
+        )
         setattr(role, "permissions", None)
 
         if role_users.get(str(role_id).strip()):
