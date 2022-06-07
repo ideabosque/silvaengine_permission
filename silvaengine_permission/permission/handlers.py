@@ -884,6 +884,8 @@ def get_users_by_role_type(
 
     print(">>>>>>>>>>>>>>> Format result: {}".format(t() - s))
 
+    print(results)
+
     print(">>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
 
     return results
