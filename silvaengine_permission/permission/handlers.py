@@ -854,9 +854,9 @@ def get_users_by_role_type(
             "User ID: {}, Role ID: {}, Group ID: {}".format(user_id, role_id, group_id)
         )
 
-        if user_id and users.get(user_id):
-            setattr(relationship, "user_base_info", users.get(user_id))
-            # relationship["user_base_info"] = users.get(user_id)
+        # if user_id and users.get(user_id):
+        #     setattr(relationship, "user_base_info", users.get(user_id))
+        # relationship["user_base_info"] = users.get(user_id)
 
         if role_id and not role_users.get(role_id):
             role_users.update({role_id: {}})
@@ -865,11 +865,14 @@ def get_users_by_role_type(
             if not role_users.get(role_id, {}).get(group_id):
                 role_users[role_id].update({group_id: []})
 
-            role_users[role_id][group_id].append(
-                jsonpickle.decode(
-                    jsonpickle.encode(relationship, unpicklable=False)
-                ).get("attribute_values", relationship)
-            )
+            relationship = jsonpickle.decode(
+                jsonpickle.encode(relationship, unpicklable=False)
+            ).get("attribute_values", relationship)
+
+            if relationship and user_id and users.get(user_id):
+                relationship.update({"user_base_info": users.get(user_id)})
+
+            role_users[role_id][group_id].append(relationship)
 
     print(">>>>>>>>>>>>>>> Get user relationships: {}".format(t() - s))
     s = t()
