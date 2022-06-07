@@ -886,20 +886,24 @@ def get_users_by_role_type(
         # if role.get("permissions"):
         # role.permissions = []
         # del role["permissions"]
-        print(
-            "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
-            role_id,
-            role_users.get(str(role_id).strip()),
-        )
-        setattr(role, "permissions", None)
+        # print(
+        #     "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+        #     role_id,
+        #     role_users.get(str(role_id).strip()),
+        # )
+        # setattr(role, "permissions", None)
 
         if role_users.get(str(role_id).strip()):
-            setattr(role, "groups", role_users.get(str(role_id).strip()))
-            results.append(
-                jsonpickle.decode(jsonpickle.encode(role, unpicklable=False)).get(
-                    "attribute_values", role
-                )
+            role = jsonpickle.decode(jsonpickle.encode(role, unpicklable=False)).get(
+                "attribute_values", role
             )
+
+            role.update(
+                {"groups": role_users.get(str(role_id).strip()), "permissions": None}
+            )
+
+            # setattr(role, "groups", role_users.get(str(role_id).strip()))
+            results.append(role)
 
     print(">>>>>>>>>>>>>>> Result: {}".format(t() - s))
     print(results)
