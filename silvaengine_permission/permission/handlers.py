@@ -899,7 +899,10 @@ def get_users_by_role_type(
             )
 
             role.update(
-                {"groups": role_users.get(str(role_id).strip()), "permissions": None}
+                {
+                    "groups": role_users.get(str(role_id).strip()),
+                    "permissions": None,
+                }
             )
 
             # setattr(role, "groups", role_users.get(str(role_id).strip()))
