@@ -811,7 +811,6 @@ def get_users_by_role_type(
         range_key_condition=(RelationshipModel.type == int(relationship_type)),
         filter_condition=relationship_filter_condition,
     )
-    print("---------- Relationships length:", len(relationships))
     print(">>>>>>>>>>>>>>> Get relationships 11111111111: {}".format(t() - s))
     s = t()
     # relationships = Utility.json_loads(Utility.json_dumps(test))
