@@ -850,10 +850,6 @@ def get_users_by_role_type(
         role_id = str(relationship.role_id).strip()
         group_id = str(relationship.group_id).strip()
 
-        print(
-            "User ID: {}, Role ID: {}, Group ID: {}".format(user_id, role_id, group_id)
-        )
-
         # if user_id and users.get(user_id):
         #     setattr(relationship, "user_base_info", users.get(user_id))
         # relationship["user_base_info"] = users.get(user_id)
