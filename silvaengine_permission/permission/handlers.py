@@ -897,12 +897,12 @@ def get_users_by_role_type(
             # role["groups"] = role_users.get(str(role_id).strip())
             print("ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\r\n")
             setattr(role, "groups", role_users.get(str(role_id).strip()))
-            results.append(role)
+            results.append(jsonpickle.decode(jsonpickle.encode(role, unpicklable=True)))
 
     print(">>>>>>>>>>>>>>> Result: {}".format(t() - s))
     s = t()
 
-    results = jsonpickle.decode(jsonpickle.encode(results, unpicklable=True))
+    # results = jsonpickle.decode(jsonpickle.encode(results, unpicklable=True))
 
     print(">>>>>>>>>>>>>>> Format result: {}".format(t() - s))
 
