@@ -867,10 +867,8 @@ def get_users_by_role_type(
 
             role_users[role_id][group_id].append(
                 jsonpickle.decode(
-                    jsonpickle.encode(relationship, unpicklable=False).get(
-                        "attribute_values", role
-                    )
-                )
+                    jsonpickle.encode(relationship, unpicklable=False)
+                ).get("attribute_values", relationship)
             )
 
     print(">>>>>>>>>>>>>>> Get user relationships: {}".format(t() - s))
@@ -898,10 +896,8 @@ def get_users_by_role_type(
         if role_users.get(str(role_id).strip()):
             setattr(role, "groups", role_users.get(str(role_id).strip()))
             results.append(
-                jsonpickle.decode(
-                    jsonpickle.encode(role, unpicklable=False).get(
-                        "attribute_values", role
-                    )
+                jsonpickle.decode(jsonpickle.encode(role, unpicklable=False)).get(
+                    "attribute_values", role
                 )
             )
 
