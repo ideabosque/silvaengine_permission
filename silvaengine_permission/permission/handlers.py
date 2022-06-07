@@ -806,11 +806,17 @@ def get_users_by_role_type(
     #         filter_condition=relationship_filter_condition,
     #     )
     # ]
-    relationships = RelationshipModel.apply_to_type_index.query(
+    relationships = []
+    user_ids = []
+
+    for relationship in RelationshipModel.apply_to_type_index.query(
         hash_key=str(channel).strip(),
         range_key_condition=(RelationshipModel.type == int(relationship_type)),
         filter_condition=relationship_filter_condition,
-    )
+    ):
+        user_ids.append(str(relationship.user_id).strip())
+        relationships.append(relationship)
+
     print(">>>>>>>>>>>>>>> Get relationships 11111111111: {}".format(t() - s))
     s = t()
     # relationships = Utility.json_loads(Utility.json_dumps(test))
@@ -818,7 +824,7 @@ def get_users_by_role_type(
     print(">>>>>>>>>>>>>>> Get relationships: {}".format(t() - s))
     s = t()
 
-    user_ids = [relationship.user_id for relationship in relationships]
+    # user_ids = [relationship.user_id for relationship in relationships]
     users = {}
 
     if len(user_ids):
