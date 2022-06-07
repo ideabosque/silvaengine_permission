@@ -6,8 +6,7 @@ from silvaengine_utility import Utility
 from silvaengine_resource import ResourceModel
 from .models import RelationshipModel, RoleModel
 from .enumerations import RoleRelationshipType, RoleType
-from pynamodb_encoder.encoder import Encoder
-import uuid, pendulum
+import uuid, pendulum, jsonpickle
 
 
 # Create role
@@ -759,14 +758,6 @@ def get_users_by_role_type(
         & (RoleModel.status == True)
         & (RoleModel.type.is_in(*role_types))
     )
-    # roles = Utility.json_loads(
-    #     Utility.json_dumps(
-    #         {
-    #             role.role_id: role
-    #             for role in RoleModel.scan(filter_condition=role_filter_condition)
-    #         }
-    #     )
-    # )
     roles = {
         str(role.role_id).strip(): role
         for role in RoleModel.scan(filter_condition=role_filter_condition)
@@ -779,34 +770,9 @@ def get_users_by_role_type(
     s = t()
 
     # 3. Get relationships & user ids.
-    relationship_filter_condition = (
-        RelationshipModel.role_id.is_in(*list(set(roles.keys())))
-        # & (RelationshipModel.type == int(relationship_type))
-        # & (RelationshipModel.apply_to == str(channel).strip())
+    relationship_filter_condition = RelationshipModel.role_id.is_in(
+        *list(set(roles.keys()))
     )
-    # relationships = Utility.json_loads(
-    #     Utility.json_dumps(
-    #         [
-    #             relationship
-    #             for relationship in RelationshipModel.scan(
-    #                 filter_condition=relationship_filter_condition
-    #             )
-    #         ]
-    #     )
-    # )
-    # relationships = [
-    #     # orjson.loads(
-    #     #     orjson.dumps(
-    #     #         relationship, option=orjson.OPT_NAIVE_UTC | orjson.OPT_SERIALIZE_NUMPY
-    #     #     )
-    #     # )
-    #     Utility.convert_object_to_dict(relationship)
-    #     for relationship in RelationshipModel.apply_to_type_index.query(
-    #         hash_key=str(channel).strip(),
-    #         range_key_condition=(RelationshipModel.type == int(relationship_type)),
-    #         filter_condition=relationship_filter_condition,
-    #     )
-    # ]
     relationships = []
     user_ids = []
 
@@ -820,12 +786,10 @@ def get_users_by_role_type(
 
     print(">>>>>>>>>>>>>>> Get relationships 11111111111: {}".format(t() - s))
     s = t()
-    # relationships = Utility.json_loads(Utility.json_dumps(test))
 
     print(">>>>>>>>>>>>>>> Get relationships: {}".format(t() - s))
     s = t()
 
-    # user_ids = [relationship.user_id for relationship in relationships]
     users = {}
 
     if len(user_ids):
@@ -836,7 +800,6 @@ def get_users_by_role_type(
 
     # 4. User relations
     role_users = {}
-    print("------ Group ids:", group_ids)
 
     for relationship in relationships:
         if (
@@ -851,10 +814,6 @@ def get_users_by_role_type(
         role_id = str(relationship.role_id).strip()
         group_id = str(relationship.group_id).strip()
 
-        # if user_id and users.get(user_id):
-        #     setattr(relationship, "user_base_info", users.get(user_id))
-        # relationship["user_base_info"] = users.get(user_id)
-
         if role_id and not role_users.get(role_id):
             role_users.update({role_id: {}})
 
@@ -862,7 +821,9 @@ def get_users_by_role_type(
             if not role_users.get(role_id, {}).get(group_id):
                 role_users[role_id].update({group_id: []})
 
-            relationship = Encoder.encode(relationship)
+            relationship = jsonpickle.decode(
+                jsonpickle.encode(relationship, unpicklable=False)
+            ).get("attribute_values", relationship)
 
             if relationship and user_id and users.get(user_id):
                 relationship.update({"user_base_info": users.get(user_id)})
@@ -875,24 +836,11 @@ def get_users_by_role_type(
     # 5. Result
     results = []
 
-    print(role_users)
-
     for role_id, role in roles.items():
-        # if role.get("permissions"):
-        #     # role.permissions = []
-        #     del role["permissions"]
-        # if role.get("permissions"):
-        # role.permissions = []
-        # del role["permissions"]
-        # print(
-        #     "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
-        #     role_id,
-        #     role_users.get(str(role_id).strip()),
-        # )
-        # setattr(role, "permissions", None)
-
         if role_users.get(str(role_id).strip()):
-            role = Encoder.encode(role)
+            role = jsonpickle.decode(jsonpickle.encode(role, unpicklable=False)).get(
+                "attribute_values", role
+            )
 
             role.update(
                 {
@@ -901,11 +849,9 @@ def get_users_by_role_type(
                 }
             )
 
-            # setattr(role, "groups", role_users.get(str(role_id).strip()))
             results.append(role)
 
     print(">>>>>>>>>>>>>>> Result: {}".format(t() - s))
-    print(results)
     print(">>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
 
     return results
