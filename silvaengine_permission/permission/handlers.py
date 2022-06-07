@@ -862,6 +862,8 @@ def get_users_by_role_type(
     # 5. Result
     results = []
 
+    print(role_users)
+
     for role_id, role in roles.items():
         # if role.get("permissions"):
         #     # role.permissions = []
@@ -869,11 +871,13 @@ def get_users_by_role_type(
         # if role.get("permissions"):
         # role.permissions = []
         # del role["permissions"]
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", role_id, role_users.get(str(role_id).strip()))
         setattr(role, "permissions", None)
 
         if role_users.get(str(role_id).strip()):
             # role.update({"groups": role_users.get(str(role_id).strip())})
             # role["groups"] = role_users.get(str(role_id).strip())
+            print("ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\r\n")
             setattr(role, "groups", role_users.get(str(role_id).strip()))
             results.append(role)
 
