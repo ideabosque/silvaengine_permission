@@ -6,7 +6,7 @@ from silvaengine_utility import Utility
 from silvaengine_resource import ResourceModel
 from .models import RelationshipModel, RoleModel
 from .enumerations import RoleRelationshipType, RoleType
-import uuid, pendulum
+import uuid, pendulum, jsonpickle
 
 
 # Create role
@@ -878,6 +878,12 @@ def get_users_by_role_type(
             results.append(role)
 
     print(">>>>>>>>>>>>>>> Result: {}".format(t() - s))
+    s = t()
+
+    results = jsonpickle.decode(jsonpickle.encode(results, unpicklable=True))
+
+    print(">>>>>>>>>>>>>>> Format result: {}".format(t() - s))
+
     print(">>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
 
     return results
