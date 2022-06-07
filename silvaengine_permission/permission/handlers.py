@@ -767,7 +767,7 @@ def get_users_by_role_type(
     #     )
     # )
     roles = {
-        role.role_id: role
+        str(role.role_id).strip(): role
         for role in RoleModel.scan(filter_condition=role_filter_condition)
     }
 
@@ -811,6 +811,7 @@ def get_users_by_role_type(
         range_key_condition=(RelationshipModel.type == int(relationship_type)),
         filter_condition=relationship_filter_condition,
     )
+    print("---------- Relationships length:", len(relationships))
     print(">>>>>>>>>>>>>>> Get relationships 11111111111: {}".format(t() - s))
     s = t()
     # relationships = Utility.json_loads(Utility.json_dumps(test))
@@ -829,6 +830,7 @@ def get_users_by_role_type(
 
     # 4. User relations
     role_users = {}
+    print("------ Group ids:", group_ids)
 
     for relationship in relationships:
         if (
@@ -842,6 +844,10 @@ def get_users_by_role_type(
         user_id = str(relationship.user_id).strip()
         role_id = str(relationship.role_id).strip()
         group_id = str(relationship.group_id).strip()
+
+        print(
+            "User ID: {}, Role ID: {}, Group ID: {}".format(user_id, role_id, group_id)
+        )
 
         if user_id and users.get(user_id):
             setattr(relationship, "user_base_info", users.get(user_id))
