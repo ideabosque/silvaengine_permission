@@ -832,6 +832,7 @@ def get_users_by_role_type(
     print("------ Group ids:", group_ids)
 
     for relationship in relationships:
+        print(str(relationship.group_id).strip())
         if (
             type(group_ids) is list
             and len(group_ids)
