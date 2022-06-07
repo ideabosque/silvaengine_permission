@@ -865,9 +865,13 @@ def get_users_by_role_type(
             if not role_users.get(role_id, {}).get(group_id):
                 role_users[role_id].update({group_id: []})
 
-            role_users[role_id][group_id].append(relationship)
-
-        print(relationship)
+            role_users[role_id][group_id].append(
+                jsonpickle.decode(
+                    jsonpickle.encode(relationship, unpicklable=False).get(
+                        "attribute_values", role
+                    )
+                )
+            )
 
     print(">>>>>>>>>>>>>>> Get user relationships: {}".format(t() - s))
     s = t()
@@ -892,23 +896,17 @@ def get_users_by_role_type(
         setattr(role, "permissions", None)
 
         if role_users.get(str(role_id).strip()):
-            # role.update({"groups": role_users.get(str(role_id).strip())})
-            # role["groups"] = role_users.get(str(role_id).strip())
-            print("ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\r\n")
             setattr(role, "groups", role_users.get(str(role_id).strip()))
             results.append(
-                jsonpickle.decode(jsonpickle.encode(role, unpicklable=False))
+                jsonpickle.decode(
+                    jsonpickle.encode(role, unpicklable=False).get(
+                        "attribute_values", role
+                    )
+                )
             )
 
     print(">>>>>>>>>>>>>>> Result: {}".format(t() - s))
-    s = t()
-
-    # results = jsonpickle.decode(jsonpickle.encode(results, unpicklable=True))
-
-    print(">>>>>>>>>>>>>>> Format result: {}".format(t() - s))
-
     print(results)
-
     print(">>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
 
     return results
