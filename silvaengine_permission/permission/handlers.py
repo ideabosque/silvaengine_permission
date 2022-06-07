@@ -6,7 +6,8 @@ from silvaengine_utility import Utility
 from silvaengine_resource import ResourceModel
 from .models import RelationshipModel, RoleModel
 from .enumerations import RoleRelationshipType, RoleType
-import uuid, pendulum, jsonpickle
+from pynamodb_encoder.encoder import Encoder
+import uuid, pendulum
 
 
 # Create role
@@ -861,9 +862,7 @@ def get_users_by_role_type(
             if not role_users.get(role_id, {}).get(group_id):
                 role_users[role_id].update({group_id: []})
 
-            relationship = jsonpickle.decode(
-                jsonpickle.encode(relationship, unpicklable=False)
-            ).get("attribute_values", relationship)
+            relationship = Encoder.encode(relationship)
 
             if relationship and user_id and users.get(user_id):
                 relationship.update({"user_base_info": users.get(user_id)})
@@ -893,9 +892,7 @@ def get_users_by_role_type(
         # setattr(role, "permissions", None)
 
         if role_users.get(str(role_id).strip()):
-            role = jsonpickle.decode(jsonpickle.encode(role, unpicklable=False)).get(
-                "attribute_values", role
-            )
+            role = Encoder.encode(role)
 
             role.update(
                 {
