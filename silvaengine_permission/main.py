@@ -71,8 +71,13 @@ def deploy() -> list:
                     ],
                     "query": [
                         {
-                            "action": "roles",
+                            "action": "rolesManagement",
                             "label": "View Role Management",
+                        },
+                        {
+                            "action": "roles",
+                            "label": "View Role List",
+                            "visible": False,
                         },
                         {
                             "action": "role",
