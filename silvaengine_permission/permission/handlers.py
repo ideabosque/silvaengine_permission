@@ -691,7 +691,11 @@ def get_roles_by_user_id(
                     "group_id": gid,
                 }
             elif roles.get(rid):
-                user_roles[uid][gid]["roles"].append(roles.get(rid))
+                role = roles.get(rid)
+                role["group_id"] = gid
+                role["relationship_type"] = relationship.type
+
+                user_roles[uid][gid]["roles"].append(role)
 
         # for uid, group in user_roles.items():
         #     for gid, value in group.items():
