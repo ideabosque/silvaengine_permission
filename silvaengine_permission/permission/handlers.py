@@ -6,8 +6,9 @@ from silvaengine_utility import Utility
 from silvaengine_resource import ResourceModel
 from .models import RelationshipModel, RoleModel
 from .enumerations import RoleRelationshipType, RoleType
-from user_engine import UserEngine
 import uuid, pendulum, jsonpickle
+
+# from user_engine import UserEngine
 
 
 # Create role
