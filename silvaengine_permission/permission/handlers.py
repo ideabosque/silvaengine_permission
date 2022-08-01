@@ -855,18 +855,31 @@ def get_users_by_role_type(
 
     for role_id, role in roles.items():
         if role_users.get(str(role_id).strip()):
-            role = jsonpickle.decode(jsonpickle.encode(role, unpicklable=False)).get(
-                "attribute_values", role
-            )
+            # role = jsonpickle.decode(jsonpickle.encode(role, unpicklable=False)).get(
+            #     "attribute_values", role
+            # )
 
-            role.update(
+            # role.update(
+            #     {
+            #         "groups": role_users.get(str(role_id).strip()),
+            #         "permissions": None,
+            #     }
+            # )
+
+            results.append(
                 {
                     "groups": role_users.get(str(role_id).strip()),
                     "permissions": None,
+                    "role_id": role.role_id,
+                    "apply_to": role.apply_to,
+                    "type": role.type,
+                    "name": role.name,
+                    "permissions": role.permissions,
+                    "description": role.description,
+                    "is_admin": role.is_admin,
+                    "status": role.status,
                 }
             )
-
-            results.append(role)
 
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Build results: {}".format(t() - s))
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
