@@ -6,6 +6,7 @@ from silvaengine_utility import Utility
 from silvaengine_resource import ResourceModel
 from .models import RelationshipModel, RoleModel
 from .enumerations import RoleRelationshipType, RoleType
+from user_engine import UserEngine
 import uuid, pendulum, jsonpickle
 
 
@@ -737,12 +738,13 @@ def get_users_by_role_type(
         return []
 
     # 1. Get callback function.
-    fn_get_users = Utility.import_dynamically(
-        "user_engine",
-        "get_users_by_ids",
-        "UserEngine",
-        {"logger": None, **settings},
-    )
+    # fn_get_users = Utility.import_dynamically(
+    #     "user_engine",
+    #     "get_users_by_ids",
+    #     "UserEngine",
+    #     {"logger": None, **settings},
+    # )
+    fn_get_users = UserEngine(None, **settings).get_users_by_ids
 
     if not callable(fn_get_users):
         raise Exception("Module is not exists or the function is uncallable", 500)
