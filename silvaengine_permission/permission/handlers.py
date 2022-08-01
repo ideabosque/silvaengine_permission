@@ -770,7 +770,7 @@ def get_users_by_role_type(
     if not len(roles):
         raise Exception("No roles", 500)
 
-    print(">>>>>>>>>>>>>>> Get roles: {}".format(t() - s))
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get roles: {}".format(t() - s))
     s = t()
 
     # 3. Get relationships & user ids.
@@ -788,10 +788,14 @@ def get_users_by_role_type(
         user_ids.append(str(relationship.user_id).strip())
         relationships.append(relationship)
 
-    print(">>>>>>>>>>>>>>> Get relationships 11111111111: {}".format(t() - s))
+    print(
+        ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get relationships 11111111111: {}".format(
+            t() - s
+        )
+    )
     s = t()
 
-    print(">>>>>>>>>>>>>>> Get relationships: {}".format(t() - s))
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get relationships: {}".format(t() - s))
     s = t()
 
     users = {}
@@ -799,7 +803,7 @@ def get_users_by_role_type(
     if len(user_ids):
         users = fn_get_users(user_ids=list(set(user_ids)), settings=settings)
 
-    print(">>>>>>>>>>>>>>> Get users: {}".format(t() - s))
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get users: {}".format(t() - s))
     s = t()
 
     # 4. User relations
@@ -825,16 +829,25 @@ def get_users_by_role_type(
             if not role_users.get(role_id, {}).get(group_id):
                 role_users[role_id].update({group_id: []})
 
-            relationship = jsonpickle.decode(
-                jsonpickle.encode(relationship, unpicklable=False)
-            ).get("attribute_values", relationship)
+            # relationship = jsonpickle.decode(
+            #     jsonpickle.encode(relationship, unpicklable=False)
+            # ).get("attribute_values", relationship)
+            relationship = {
+                "relationship_id": relationship.relationship_id,
+                "apply_to": relationship.apply_to,
+                "type": relationship.type,
+                "user_id": user_id,
+                "role_id": role_id,
+                "group_id": group_id,
+                "status": relationship.status,
+            }
 
             if relationship and user_id and users.get(user_id):
                 relationship.update({"user_base_info": users.get(user_id)})
 
             role_users[role_id][group_id].append(relationship)
 
-    print(">>>>>>>>>>>>>>> Get user relationships: {}".format(t() - s))
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get user relationships: {}".format(t() - s))
     s = t()
 
     # 5. Result
@@ -855,8 +868,8 @@ def get_users_by_role_type(
 
             results.append(role)
 
-    print(">>>>>>>>>>>>>>> Result: {}".format(t() - s))
-    print(">>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Build results: {}".format(t() - s))
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
 
     return results
 
