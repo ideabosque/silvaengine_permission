@@ -8,9 +8,6 @@ from .models import RelationshipModel, RoleModel
 from .enumerations import RoleRelationshipType, RoleType
 import uuid, pendulum, jsonpickle
 
-# from user_engine import UserEngine
-
-
 # Create role
 def create_role_handler(channel, kwargs):
     try:
@@ -738,19 +735,19 @@ def get_users_by_role_type(
     ):
         return []
 
-    # 1. Get callback function.
-    fn_get_users = Utility.import_dynamically(
-        "user_engine",
-        "get_users_by_ids",
-        "UserEngine",
-        {"logger": None, **settings},
-    )
+    # # 1. Get callback function.
+    # fn_get_users = Utility.import_dynamically(
+    #     "user_engine",
+    #     "get_users_by_ids",
+    #     "UserEngine",
+    #     {"logger": None, **settings},
+    # )
 
-    if not callable(fn_get_users):
-        raise Exception("Module is not exists or the function is uncallable", 500)
+    # if not callable(fn_get_users):
+    #     raise Exception("Module is not exists or the function is uncallable", 500)
 
-    print(">>>>>>>>>>>>>>> Get callback function: {}".format(t() - s))
-    s = t()
+    # print(">>>>>>>>>>>>>>> Get callback function: {}".format(t() - s))
+    # s = t()
 
     # 2. Get roles
     role_types = list(set([int(role_type) for role_type in role_types]))
@@ -803,7 +800,12 @@ def get_users_by_role_type(
     users = {}
 
     if len(user_ids):
-        users = fn_get_users(user_ids=list(set(user_ids)), settings=settings)
+        users = Utility.import_dynamically(
+            "user_engine",
+            "get_users_by_ids",
+            "UserEngine",
+            {"logger": None, **settings},
+        )(user_ids=list(set(user_ids)), settings=settings)
 
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get users: {}".format(t() - s))
     s = t()
