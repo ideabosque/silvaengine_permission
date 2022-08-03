@@ -871,23 +871,18 @@ def get_users_by_role_type(
             # )
 
             results.append(
-                jsonpickle.decode(
-                    jsonpickle.encode(
-                        {
-                            "groups": role_users.get(str(role_id).strip()),
-                            "permissions": None,
-                            "role_id": role.role_id,
-                            "apply_to": role.apply_to,
-                            "type": role.type,
-                            "name": role.name,
-                            "permissions": role.permissions,
-                            "description": role.description,
-                            "is_admin": role.is_admin,
-                            "status": role.status,
-                        },
-                        unpicklable=False,
-                    )
-                )
+                {
+                    "groups": role_users.get(str(role_id).strip()),
+                    "permissions": None,
+                    "role_id": role.role_id,
+                    "apply_to": role.apply_to,
+                    "type": role.type,
+                    "name": role.name,
+                    "permissions": role.permissions,
+                    "description": role.description,
+                    "is_admin": role.is_admin,
+                    "status": role.status,
+                }
             )
 
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Build results: {}".format(t() - s))
