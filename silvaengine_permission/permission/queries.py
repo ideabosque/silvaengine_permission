@@ -124,9 +124,22 @@ def resolve_roles(info, **kwargs):
         results = RoleModel.scan(**arguments)
         roles = [
             OutputRoleType(
-                **Utility.json_loads(
-                    Utility.json_dumps(dict(**role.__dict__["attribute_values"]))
-                )
+                # **Utility.json_loads(
+                #     Utility.json_dumps(dict(**role.__dict__["attribute_values"]))
+                # )
+                **{
+                    "role_id": role.role_id,
+                    "type": role.type,
+                    "name": role.name,
+                    "apply_to": role.apply_to,
+                    "description": role.description,
+                    "permissions": role.permissions,
+                    "is_admin": role.is_admin,
+                    "status": role.status,
+                    "updated_by": role.updated_by,
+                    "created_at": role.created_at,
+                    "updated_at": role.updated_at,
+                }
             )
             for role in results
         ]
@@ -218,7 +231,7 @@ def resolve_users(info, **kwargs):
                 * arguments.get("limit"),
                 "last_evaluated_key": None,
                 "filter_condition": arguments["filter_condition"],
-                "attributes_to_get": ["role_id"]
+                "attributes_to_get": ["role_id"],
             }
 
             # Skip (int(kwargs.get("page_number", 0)) - 1) rows
@@ -240,9 +253,22 @@ def resolve_users(info, **kwargs):
             if role:
                 roles[role.role_id] = SimilarUserType(
                     users=[],
-                    **Utility.json_loads(
-                        Utility.json_dumps(dict(**role.__dict__["attribute_values"]))
-                    )
+                    # **Utility.json_loads(
+                    #     Utility.json_dumps(dict(**role.__dict__["attribute_values"]))
+                    # )
+                    **{
+                        "role_id": role.role_id,
+                        "type": role.type,
+                        "name": role.name,
+                        "apply_to": role.apply_to,
+                        "description": role.description,
+                        "permissions": role.permissions,
+                        "is_admin": role.is_admin,
+                        "status": role.status,
+                        "updated_by": role.updated_by,
+                        "created_at": role.created_at,
+                        "updated_at": role.updated_at,
+                    }
                 )
                 total += 1
 
@@ -299,11 +325,23 @@ def resolve_users(info, **kwargs):
         results = RelationshipModel.scan(filter_condition=filter_condition)
         relationships = [
             UserRelationshipType(
-                **Utility.json_loads(
-                    Utility.json_dumps(
-                        dict(**relationship.__dict__["attribute_values"])
-                    )
-                )
+                **{
+                    "relationship_id": relationship.relationship_id,
+                    "group_id": relationship.group_id,
+                    "user_id": relationship.user_id,
+                    "type": relationship.type,
+                    "apply_to": relationship.apply_to,
+                    "role_id ": relationship.role_id,
+                    "created_at": relationship.created_at,
+                    "updated_at": relationship.updated_at,
+                    "updated_by": relationship.updated_by,
+                    "status": relationship.status,
+                }
+                # **Utility.json_loads(
+                #     Utility.json_dumps(
+                #         dict(**relationship.__dict__["attribute_values"])
+                #     )
+                # )
             )
             for relationship in results
         ]
