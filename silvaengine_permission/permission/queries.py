@@ -331,7 +331,7 @@ def resolve_users(info, **kwargs):
                     "user_id": relationship.user_id,
                     "type": relationship.type,
                     "apply_to": relationship.apply_to,
-                    "role_id ": relationship.role_id,
+                    "role_id": relationship.role_id,
                     "created_at": relationship.created_at,
                     "updated_at": relationship.updated_at,
                     "updated_by": relationship.updated_by,
