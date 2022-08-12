@@ -10,7 +10,7 @@ def notification(info):
     try:
         return Monitor(
             info.context.get("logger"),
-            info.context.get("setting"),
+            **info.context.get("setting"),
         ).save_notification(
             notifiction_type="permission",
             channel=info.context.get("channel"),
