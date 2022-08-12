@@ -13,7 +13,7 @@ def notification(info):
             **info.context.get("setting"),
         ).save_notification(
             notifiction_type="permission",
-            channel=info.context.get("channel"),
+            channel=info.context.get("apply_to"),
         )
     except Exception as e:
         raise e
