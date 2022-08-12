@@ -18,6 +18,7 @@ from .handlers import (
     delete_relationship_handler,
     save_relationships_handler,
 )
+from .utils import notification
 import traceback
 
 # Append role info.
@@ -46,6 +47,8 @@ class CreateRole(Mutation):
                 )
             )
 
+            # Notification
+            notification(info=info)
             return CreateRole(role=role)
         except Exception as e:
             info.context.get("logger").exception(traceback.format_exc())
@@ -80,6 +83,8 @@ class UpdateRole(Mutation):
                 )
             )
 
+            # Notification
+            notification(info=info)
             return UpdateRole(role=role)
         except Exception as e:
             info.context.get("logger").exception(traceback.format_exc())
@@ -100,6 +105,8 @@ class DeleteRole(Mutation):
                 channel=info.context.get("apply_to"),
                 role_id=kwargs.get("role_id"),
             )
+            # Notification
+            notification(info=info)
             return DeleteRole(ok=True)
         except Exception as e:
             info.context.get("logger").exception(traceback.format_exc())
@@ -134,7 +141,8 @@ class CreateRelationship(Mutation):
                     )
                 )
             )
-
+            # Notification
+            notification(info=info)
             return CreateRelationship(relationship=relationship)
         except Exception as e:
             info.context.get("logger").exception(traceback.format_exc())
@@ -167,6 +175,8 @@ class UpdateRelationship(Mutation):
                 )
             )
 
+            # Notification
+            notification(info=info)
             return UpdateRelationship(relationship=relationship)
         except Exception as e:
             info.context.get("logger").exception(traceback.format_exc())
@@ -187,6 +197,8 @@ class DeleteRelationship(Mutation):
                 channel=info.context.get("apply_to"),
                 relationship_id=kwargs.get("relationship_id"),
             )
+            # Notification
+            notification(info=info)
             return DeleteRelationship(ok=True)
         except Exception as e:
             info.context.get("logger").exception(traceback.format_exc())
@@ -208,6 +220,8 @@ class SaveRelationships(Mutation):
                 operator_id=info.context.get("authorizer", {}).get("user_id", "setup"),
                 relationships=kwargs.get("relationships"),
             )
+            # Notification
+            notification(info=info)
             return SaveRelationships(ok=True)
         except Exception as e:
             info.context.get("logger").exception(traceback.format_exc())

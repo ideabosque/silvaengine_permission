@@ -1,8 +1,22 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+from monitor_engine import Monitor
 
 __author__ = "bl"
+
+
+def notification(info):
+    try:
+        return Monitor(
+            info.context.get("logger"),
+            info.context.get("setting"),
+        ).save_notification(
+            notifiction_type="permission",
+            channel=info.context.get("channel"),
+        )
+    except Exception as e:
+        raise e
 
 
 def validate_required(fields, input):
