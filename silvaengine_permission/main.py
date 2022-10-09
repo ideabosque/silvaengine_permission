@@ -122,6 +122,10 @@ class Permission(object):
         self.logger = logger
         self.setting = setting
 
+    def ping(self, **params):
+        self.logger.info(params)
+        return
+
     # Role interface by graphql
     def role_graphql(self, **params):
         try:
