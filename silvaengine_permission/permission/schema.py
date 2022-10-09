@@ -25,6 +25,7 @@ from .mutations import (
     DeleteRelationship,
     SaveRelationships,
 )
+import time
 
 __author__ = "bl"
 
@@ -69,6 +70,10 @@ class RoleQuery(ObjectType):
         relationship_status=Boolean(),
     )
     detection = Field(RoleDetectionType, name=String())
+    ping = String()
+
+    def resolve_ping(self, info):
+        return f"Hello at {time.strftime('%X')}!!"
 
     def resolve_roles(self, info, **kwargs):
         return resolve_roles(info, **kwargs)
