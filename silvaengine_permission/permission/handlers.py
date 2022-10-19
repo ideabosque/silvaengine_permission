@@ -4,9 +4,10 @@ from __future__ import print_function
 from datetime import datetime
 from silvaengine_utility import Utility
 from silvaengine_resource import ResourceModel
-from .models import RelationshipModel, RoleModel
-from .enumerations import RoleRelationshipType, RoleType
-import uuid, pendulum, jsonpickle
+from silvaengine_permission.permission.models import RelationshipModel, RoleModel
+from silvaengine_permission.permission.enumerations import RoleRelationshipType, RoleType
+from pynamodb.exceptions import DoesNotExist
+import uuid, pendulum
 
 # Create role
 def create_role_handler(channel, kwargs):
@@ -1159,6 +1160,45 @@ def _get_unvisible_permissions(channel, permissions):
             )
 
     return permissions
+
+def get_group_ids_by_user_and_role_ids(channel, user_ids, relationship_type, role_types=None):
+    filter_conditions = RelationshipModel.user_id.is_in(*list(set(user_ids)))
+    r = {}
+
+    if role_types and type(role_types) is list and len(role_types):
+        try:
+            m = {}
+
+            for key, roles in  get_roles_by_type(role_types, channel=channel).items():
+                for role in roles:
+                    m[role.role_id] = key
+
+            if len(m):
+                filter_conditions = (filter_conditions) & (
+                    RelationshipModel.role_id.is_in(*list(set(m.keys())))
+                )
+
+            relationships = RelationshipModel.apply_to_type_index.query(
+                hash_key=str(channel).strip(),
+                range_key_condition=(RelationshipModel.type == int(relationship_type)),
+                filter_condition=filter_conditions,
+            )
+
+            for relationship in relationships:
+                t = m.get(relationship.role_id)
+
+                if t:
+                    if type(r.get(t)) is not list:
+                        r[t] = []
+
+                    r[t].append(relationship.group_id)
+
+        except DoesNotExist:
+            pass
+        except Exception as e:
+            raise e
+
+    return r
 
 
 def add_resource():

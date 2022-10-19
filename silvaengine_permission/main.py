@@ -2,14 +2,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from graphene import Schema
-from hashlib import md5
-from silvaengine_utility import Utility
-from .permission.schema import (
+from silvaengine_utility  import Utility
+from silvaengine_permission.permission.schema import (
     RoleQuery,
     RoleMutations,
     role_type_class,
 )
-from .permission.handlers import (
+from silvaengine_permission.permission.handlers import (
     get_roles,
     get_user_permissions,
     get_roles_by_user_id,
@@ -18,8 +17,9 @@ from .permission.handlers import (
     get_roles_by_type,
     delete_relationships_by_condition,
     check_user_permissions,
+    get_group_ids_by_user_and_role_ids
 )
-from .permission.enumerations import RoleRelationshipType
+from silvaengine_permission.permission.enumerations import RoleRelationshipType
 
 
 __author__ = "bl"
@@ -441,5 +441,20 @@ class Permission(object):
                 return roles
 
             return None
+        except Exception as e:
+            raise e
+
+
+    def get_group_ids_by_user_and_role_ids(self, channel, user_ids, relationship_type, role_types=None):
+        try:
+            if not user_ids or relationship_type is None:
+                raise Exception('User ids and relationship type are required')
+
+            return get_group_ids_by_user_and_role_ids(
+                channel=channel, 
+                user_ids=user_ids, 
+                relationship_type=relationship_type, 
+                role_types=role_types,
+            )
         except Exception as e:
             raise e

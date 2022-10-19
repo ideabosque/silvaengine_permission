@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from enum import Enum
 from pynamodb.models import Model
 from pynamodb.attributes import (
     ListAttribute,
@@ -11,7 +10,7 @@ from pynamodb.attributes import (
     UTCDateTimeAttribute,
     NumberAttribute,
 )
-from pynamodb.indexes import GlobalSecondaryIndex, LocalSecondaryIndex, AllProjection
+from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
 import os
 
 __author__ = "bl"
