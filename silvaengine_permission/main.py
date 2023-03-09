@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from graphene import Schema
-from silvaengine_utility  import Utility
+from silvaengine_utility import Utility
 from silvaengine_permission.permission.schema import (
     RoleQuery,
     RoleMutations,
@@ -17,7 +17,7 @@ from silvaengine_permission.permission.handlers import (
     get_roles_by_type,
     delete_relationships_by_condition,
     check_user_permissions,
-    get_group_ids_by_user_and_role_ids
+    get_group_ids_by_user_and_role_ids,
 )
 from silvaengine_permission.permission.enumerations import RoleRelationshipType
 
@@ -110,7 +110,7 @@ def deploy() -> list:
                     "is_auth_required": False,
                     "is_graphql": False,
                     "disabled_in_resources": True,
-                    "settings": "beta_core_api",
+                    "settings": "beta_core_ewp",
                 },
             },
         }
@@ -444,16 +444,17 @@ class Permission(object):
         except Exception as e:
             raise e
 
-
-    def get_group_ids_by_user_and_role_ids(self, channel, user_ids, relationship_type, role_types=None):
+    def get_group_ids_by_user_and_role_ids(
+        self, channel, user_ids, relationship_type, role_types=None
+    ):
         try:
             if not user_ids or relationship_type is None:
-                raise Exception('User ids and relationship type are required')
+                raise Exception("User ids and relationship type are required")
 
             return get_group_ids_by_user_and_role_ids(
-                channel=channel, 
-                user_ids=user_ids, 
-                relationship_type=relationship_type, 
+                channel=channel,
+                user_ids=user_ids,
+                relationship_type=relationship_type,
                 role_types=role_types,
             )
         except Exception as e:
