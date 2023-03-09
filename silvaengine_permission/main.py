@@ -98,7 +98,7 @@ def deploy() -> list:
                     "support_methods": ["POST"],
                     "is_auth_required": True,
                     "is_graphql": True,
-                    "settings": "beta_core_api",
+                    "settings": "beta_core_ewp",
                 },
                 "permission_check_callback": {
                     "is_static": False,
