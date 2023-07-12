@@ -432,6 +432,8 @@ def get_user_permissions(authorizer, channel, group_id=None, types=None):
             )
 
         if type(types) == list and len(types):
+            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            print(types)
             filter_conditions = (filter_conditions) & (
                 RelationshipModel.type.is_in(*list(set(types)))
             )
