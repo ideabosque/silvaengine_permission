@@ -191,9 +191,9 @@ class Permission(object):
             group_id=params.get("group_id"),
         )
 
-    def get_user_permissions(self, authorizer, channel, group_id=None, types=None):
+    def get_user_permissions(self, authorizer, channel, group_id=None, role_type=None):
         return get_user_permissions(
-            authorizer=authorizer, channel=channel, group_id=group_id, types=types
+            authorizer=authorizer, channel=channel, group_id=group_id, role_type=role_type
         )
 
     # Get roles

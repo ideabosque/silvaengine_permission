@@ -412,7 +412,7 @@ def get_roles(user_id, channel, is_admin, group_id):
 
 
 # Get a list of resource permissions for a specified user
-def get_user_permissions(authorizer, channel, group_id=None, types=None):
+def get_user_permissions(authorizer, channel, group_id=None, role_type=None):
     try:
         if not authorizer or not channel:
             raise Exception("Missing required parameter(s)")
@@ -431,13 +431,6 @@ def get_user_permissions(authorizer, channel, group_id=None, types=None):
                 RelationshipModel.group_id == str(group_id).strip()
             )
 
-        if type(types) == list and len(types):
-            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            print(types)
-            filter_conditions = (filter_conditions) & (
-                RelationshipModel.type.is_in(*list(set(types)))
-            )
-
         print(filter_conditions)
         print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
@@ -445,6 +438,7 @@ def get_user_permissions(authorizer, channel, group_id=None, types=None):
             relationship.role_id
             for relationship in RelationshipModel.apply_to_type_index.query(
                 hash_key=str(channel).strip(),
+                range_key=role_type,
                 filter_condition=filter_conditions,
             )
         ]
