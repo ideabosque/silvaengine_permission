@@ -433,12 +433,16 @@ def get_user_permissions(authorizer, channel, group_id=None, role_type=None):
 
         print(filter_conditions)
         print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+        range_key_condition = None
+
+        if role_type is not None:
+            range_key_condition = (RelationshipModel.type == int(role_type))
 
         role_ids = [
             relationship.role_id
             for relationship in RelationshipModel.apply_to_type_index.query(
                 hash_key=str(channel).strip(),
-                range_key=role_type,
+                range_key_condition=range_key_condition,
                 filter_condition=filter_conditions,
             )
         ]
