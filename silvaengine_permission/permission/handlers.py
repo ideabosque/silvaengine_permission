@@ -438,6 +438,9 @@ def get_user_permissions(authorizer, channel, group_id=None, types=None):
                 RelationshipModel.type.is_in(*list(set(types)))
             )
 
+        print(filter_conditions)
+        print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+
         role_ids = [
             relationship.role_id
             for relationship in RelationshipModel.apply_to_type_index.query(
