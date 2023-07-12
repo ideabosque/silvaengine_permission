@@ -191,7 +191,7 @@ class Permission(object):
             group_id=params.get("group_id"),
         )
 
-    def get_user_permissions(self, authorizer, channel, group_id=None):
+    def get_user_permissions(self, authorizer, channel, group_id=None, types=None):
         return get_user_permissions(
             authorizer=authorizer, channel=channel, group_id=group_id, types=None
         )
