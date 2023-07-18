@@ -191,9 +191,13 @@ class Permission(object):
             group_id=params.get("group_id"),
         )
 
-    def get_user_permissions(self, authorizer, channel, group_id=None, role_type=None):
+    def get_user_permissions(self, authorizer, channel, group_id=None, relationship_type=None, role_ids=None):
         return get_user_permissions(
-            authorizer=authorizer, channel=channel, group_id=group_id, role_type=role_type
+            authorizer=authorizer, 
+            channel=channel, 
+            group_id=group_id, 
+            relationship_type=relationship_type,
+            role_ids=role_ids,
         )
 
     # Get roles
@@ -444,6 +448,28 @@ class Permission(object):
         except Exception as e:
             raise e
 
+    # Get roles by type
+    def get_roles_by_types(
+        self,
+        types, 
+        channel, 
+        status=None, 
+        is_admin=None,
+    ):
+        try:
+            roles = get_roles_by_type(
+                types=types,
+                channel=channel,
+                status=status,
+                is_admin=is_admin,
+            )
+
+            if len(roles):
+                return roles
+
+            return None
+        except Exception as e:
+            raise e
 
     def get_group_ids_by_user_and_role_ids(self, channel, user_ids, relationship_type, role_types=None):
         try:
