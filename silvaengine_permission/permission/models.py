@@ -102,3 +102,4 @@ class RelationshipModel(TraitModel):
     role_id = UnicodeAttribute()
     group_id = UnicodeAttribute(null=True)
     status = BooleanAttribute(default=True)
+    is_default = UnicodeAttribute(null=True,default=False)

@@ -124,6 +124,7 @@ class CreateRelationship(Mutation):
         role_id = String(required=True)
         updated_by = String()
         status = Boolean()
+        is_default = Boolean()
 
     @staticmethod
     def mutate(root, info, **kwargs):
@@ -161,6 +162,7 @@ class UpdateRelationship(Mutation):
         role_id = String()
         updated_by = String()
         status = Boolean()
+        is_default = Boolean()
 
     @staticmethod
     def mutate(root, info, **kwargs):

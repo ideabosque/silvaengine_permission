@@ -191,11 +191,12 @@ def create_relationship_handler(channel, operator_id, kwargs):
                 "role_id": {"field": "role_id", "type": "str"},
                 "group_id": {"field": "group_id", "type": "str"},
                 "status": {"field": "status", "type": "bool"},
+                "is_default": {"field": "is_default", "type": "bool"},
             }
 
             for argument, rule in rules.items():
                 if kwargs.get(argument) is not None and hasattr(
-                    RelationshipModel, rule.get("field")
+                    RelationshipModel, rule.get("field","")
                 ):
                     value = kwargs.get(argument)
 
@@ -207,7 +208,7 @@ def create_relationship_handler(channel, operator_id, kwargs):
                         value = bool(value)
 
                     actions.append(
-                        getattr(RelationshipModel, rule.get("field")).set(value)
+                        getattr(RelationshipModel, rule.get("field","")).set(value)
                     )
 
             for id in relationship_ids:
@@ -238,6 +239,7 @@ def create_relationship_handler(channel, operator_id, kwargs):
                         )
                     ).strip(),
                     "status": bool(kwargs.get("status", True)),
+                    "is_default": bool(kwargs.get("is_default", True)),
                 },
             ).save()
         return RelationshipModel.get(relationship_id)
@@ -260,6 +262,7 @@ def update_relationship_handler(channel, kwargs):
             "is_admin": "is_admin",
             "updated_by": "updated_by",
             "status": "status",
+            "is_default": "is_default",
         }
         need_update = False
 
@@ -362,6 +365,7 @@ def save_relationships_handler(channel, operator_id, relationships):
                         )
                     ).strip(),
                     "status": bool(relationship.get("status", True)),
+                    "is_default": bool(relationship.get("is_default", False)),
                 },
             ).save()
 
