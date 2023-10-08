@@ -67,6 +67,7 @@ class RoleQuery(ObjectType):
         owner_id=List(String),
         relationship_type=Int(),
         relationship_status=Boolean(),
+        relationship_is_default=Boolean(),
     )
     detection = Field(RoleDetectionType, name=String())
 

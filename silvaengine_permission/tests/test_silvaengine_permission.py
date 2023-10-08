@@ -145,21 +145,22 @@ class SilvaEngineAuthTest(unittest.TestCase):
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
-    @unittest.skip("demonstrating skipping")
+    # @unittest.skip("demonstrating skipping")
     def test_get_users_graphql(self):
         query = """
             query users(
-                    $pageSize: Int
-                    $pageNumber: Int
-                    $roleId: [String]
-                    $roleName: [String]
-                    $roleType: [Int]
-                    $roleStatus: Boolean
-                    $isAdminRole: Boolean
-                    $ownerId: [String]
-                    $relationshipType: Int
-                    $relationshipStatus: Boolean
-                ){
+                $pageSize: Int
+                $pageNumber: Int
+                $roleId: [String]
+                $roleName: [String]
+                $roleType: [Int]
+                $roleStatus: Boolean
+                $isAdminRole: Boolean
+                $ownerId: [String]
+                $relationshipType: Int
+                $relationshipStatus: Boolean
+                $relationshipIsDefault: Boolean
+            ){
                 users(
                     pageSize: $pageSize
                     pageNumber: $pageNumber
@@ -171,6 +172,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
                     ownerId: $ownerId
                     relationshipType: $relationshipType
                     relationshipStatus: $relationshipStatus
+                    relationshipIsDefault: $relationshipIsDefault
                 ){
                     items {
                         name
@@ -192,12 +194,13 @@ class SilvaEngineAuthTest(unittest.TestCase):
             # "roleType": [1, 2],
             # "roleStatus": True,
             # "isAdminRole": True,
-            # "ownerId": ["2018"],
+            "ownerId": ["597"],
+            "relationshipIsDefault": False,
             # "relationshipType": 3,
             # # "relationshipStatus": True,
-            "isAdminRole": True,
+            # "isAdminRole": True,
             "roleType": [1, 2, 3],
-            "roleStatus": True,
+            # "roleStatus": True,
         }
         payload = {"query": query, "variables": variables}
         response = self.instance.role_graphql(**payload)
@@ -469,7 +472,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
-    # @unittest.skip("demonstrating skipping")
+    @unittest.skip("demonstrating skipping")
     def test_save_relationships(self):
         mutation = """
             mutation saveRelationships(
@@ -815,13 +818,6 @@ class SilvaEngineAuthTest(unittest.TestCase):
             },
         }
         response = self.instance.verify_permission(request, None)
-        print("Response:", response)
-
-    @unittest.skip("demonstrating skipping")
-    def test_get_roles(self):
-        response = self.instance.get_roles_by_user_id(
-            "f2b3a074-eb9e-4210-81b2-cbe617ecc50b"
-        )
         print("Response:", response)
 
     @unittest.skip("demonstrating skipping")

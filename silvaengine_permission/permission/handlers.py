@@ -82,7 +82,6 @@ def create_role_handler(channel, kwargs):
     except Exception as e:
         raise e
 
-
 # Update role for specified ID.
 def update_role_handler(channel, kwargs):
     try:
@@ -125,7 +124,6 @@ def update_role_handler(channel, kwargs):
     except Exception as e:
         raise e
 
-
 # Delete role by specified ID.
 def delete_role_handler(channel, role_id):
     try:
@@ -140,7 +138,6 @@ def delete_role_handler(channel, role_id):
         return RoleModel(role_id).delete(condition=condition)
     except Exception as e:
         raise e
-
 
 # Create relationship of role / group / user.
 def create_relationship_handler(channel, operator_id, kwargs):
@@ -246,7 +243,6 @@ def create_relationship_handler(channel, operator_id, kwargs):
     except Exception as e:
         raise e
 
-
 # Update relationship for specified ID.
 def update_relationship_handler(channel, kwargs):
     try:
@@ -288,7 +284,6 @@ def update_relationship_handler(channel, kwargs):
     except Exception as e:
         raise e
 
-
 # Delete relationship by specified ID.
 def delete_relationship_handler(channel, relationship_id):
     try:
@@ -299,7 +294,6 @@ def delete_relationship_handler(channel, relationship_id):
         return RelationshipModel(relationship_id).delete()
     except Exception as e:
         raise e
-
 
 # Bulk save relationships
 def save_relationships_handler(channel, operator_id, relationships):
@@ -373,7 +367,6 @@ def save_relationships_handler(channel, operator_id, relationships):
     except Exception as e:
         raise e
 
-
 def get_roles(user_id, channel, is_admin, group_id):
     try:
         if not user_id:
@@ -414,7 +407,6 @@ def get_roles(user_id, channel, is_admin, group_id):
         )
     except Exception as e:
         raise e
-
 
 # Get a list of resource permissions for a specified user
 def get_user_permissions(authorizer, channel, group_id=None, relationship_type=None, role_ids = None):
@@ -512,7 +504,6 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
     except Exception as e:
         raise e
 
-
 def check_permission(roles, resource) -> bool:
     if (
         not resource.get("operation")
@@ -569,7 +560,7 @@ def check_permission(roles, resource) -> bool:
             m[operation_name] = list(set(m[operation_name] + rule.exclude))
 
     if type(m.get(request_operation_name)) is list:
-        for field in m.get(request_operation_name):
+        for field in m.get(request_operation_name,[]):
             path, field = field.strip().lower().split(":", 2)
 
             if (
@@ -585,7 +576,6 @@ def check_permission(roles, resource) -> bool:
         return True
 
     return False
-
 
 # Obtain user roles according to the specified user ID
 def get_roles_by_user_id(
@@ -711,7 +701,7 @@ def get_roles_by_user_id(
                     "group_id": gid,
                 }
             elif roles.get(rid):
-                role = roles.get(rid)
+                role = roles.get(rid,{})
                 role["group_id"] = gid
                 role["relationship_type"] = relationship.type
 
@@ -730,10 +720,9 @@ def get_roles_by_user_id(
         #         }
 
     if type(user_id) is not list and user_roles.get(str(user_id).strip()):
-        return user_roles.get(str(user_id).strip()).values()
+        return user_roles.get(str(user_id).strip(),{}).values()
 
     return user_roles
-
 
 # Obtain user roles according to the specified user ID
 # relationship_type: 0 - team, 1 - seller
@@ -911,7 +900,6 @@ def get_users_by_role_type(
 
     return results
 
-
 def get_roles_by_type(types, channel, status=None, is_admin=None) -> dict:
     try:
         roles = {}
@@ -937,7 +925,6 @@ def get_roles_by_type(types, channel, status=None, is_admin=None) -> dict:
         return roles
     except Exception as e:
         raise e
-
 
 # Delete user roles by conditions.
 def delete_relationships_by_condition(
@@ -1000,7 +987,6 @@ def delete_relationships_by_condition(
         return True
     except Exception as e:
         raise e
-
 
 # Check user permissions.
 def check_user_permissions(
@@ -1133,7 +1119,6 @@ def check_user_permissions(
     except Exception as e:
         raise e
 
-
 def _get_unvisible_permissions(channel, permissions):
     resources = {}
     results = Utility.json_loads(
@@ -1218,7 +1203,6 @@ def get_group_ids_by_user_and_role_ids(channel, user_ids, relationship_type, rol
             raise e
 
     return r
-
 
 def add_resource():
     with open("f:\install.log", "a") as fd:

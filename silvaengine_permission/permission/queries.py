@@ -285,6 +285,7 @@ def resolve_users(info, **kwargs):
         relationship_field_argument_mappings_eq = {
             "relationship_status": "status",
             "relationship_type": "type",
+            "relationship_is_default": "is_default",
         }
         relationship_field_argument_mappings_in = {
             "owner_id": "group_id",
@@ -336,6 +337,7 @@ def resolve_users(info, **kwargs):
                     "updated_at": relationship.updated_at,
                     "updated_by": relationship.updated_by,
                     "status": relationship.status,
+                    "is_default": relationship.is_default,
                 }
                 # **Utility.json_loads(
                 #     Utility.json_dumps(
@@ -379,9 +381,7 @@ def resolve_users(info, **kwargs):
                             [
                                 # user.cognito_user_sub
                                 str(user["id"])
-                                for user in roles[
-                                    str(relationship.role_id).strip()
-                                ].users
+                                for user in roles[str(relationship.role_id).strip()].users
                                 # if hasattr(user, "cognito_user_sub")
                                 if ("id" in user)
                             ]
