@@ -77,6 +77,7 @@ class RelationshipType(ObjectType):
     updated_at = DateTime()
     updated_by = String()
     status = Boolean()
+    is_default =Boolean()
 
 
 class UserRelationshipType(ObjectType):
@@ -92,6 +93,7 @@ class UserRelationshipType(ObjectType):
     updated_at = DateTime()
     updated_by = String()
     status = Boolean()
+    is_default =Boolean()
 
 
 class SimilarUserType(RoleType):

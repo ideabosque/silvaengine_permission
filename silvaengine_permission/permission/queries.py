@@ -96,7 +96,7 @@ def resolve_roles(info, **kwargs):
             page_number = 1
 
         if arguments.get("limit", 0) > 0 and page_number > 1:
-            pagination_offset = (page_number - 1) * int(arguments.get("limit"))
+            pagination_offset = (page_number - 1) * int(arguments.get("limit",0))
 
         pagination_arguments = {
             "limit": pagination_offset if pagination_offset > 0 else None,
@@ -225,10 +225,10 @@ def resolve_users(info, **kwargs):
                 )
 
         # Pagination.
-        if arguments.get("limit") > 0 and kwargs.get("page_number", 0) > 1:
+        if arguments.get("limit",0) > 0 and kwargs.get("page_number", 0) > 1:
             pagination_arguments = {
                 "limit": (int(kwargs.get("page_number", 0)) - 1)
-                * arguments.get("limit"),
+                * arguments.get("limit",0),
                 "last_evaluated_key": None,
                 "filter_condition": arguments["filter_condition"],
                 "attributes_to_get": ["role_id"],

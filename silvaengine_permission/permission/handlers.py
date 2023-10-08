@@ -347,7 +347,7 @@ def save_relationships_handler(channel, operator_id, relationships):
                     relationship_id=str(item.relationship_id).strip(),
                 )
 
-        for relationship in relationships:
+        for relationship in relationships:       
             RelationshipModel(
                 str(uuid.uuid1()),
                 **{
@@ -368,6 +368,7 @@ def save_relationships_handler(channel, operator_id, relationships):
                     "is_default": bool(relationship.get("is_default", False)),
                 },
             ).save()
+
 
     except Exception as e:
         raise e
@@ -743,10 +744,10 @@ def get_users_by_role_type(
     relationship_type=0,
     group_ids=None,
 ) -> list:
-    t = lambda: int(pendulum.now().timestamp() * 1000)
-    s = t()
-    f = s
-    print(">>>>>>>>>>>>>>> START: {}".format(s))
+    # t = lambda: int(pendulum.now().timestamp() * 1000)
+    # s = t()
+    # f = s
+    # print(">>>>>>>>>>>>>>> START: {}".format(s))
 
     if (
         (type(role_types) is not list and len(role_types))
@@ -789,8 +790,8 @@ def get_users_by_role_type(
     if not len(roles):
         raise Exception("No roles", 500)
 
-    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get roles: {}".format(t() - s))
-    s = t()
+    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get roles: {}".format(t() - s))
+    # s = t()
 
     # 3. Get relationships & user ids.
     relationship_filter_condition = RelationshipModel.role_id.is_in(
@@ -807,15 +808,15 @@ def get_users_by_role_type(
         user_ids.append(str(relationship.user_id).strip())
         relationships.append(relationship)
 
-    print(
-        ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get relationships 11111111111: {}".format(
-            t() - s
-        )
-    )
-    s = t()
+    # print(
+    #     ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get relationships 11111111111: {}".format(
+    #         t() - s
+    #     )
+    # )
+    # s = t()
 
-    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get relationships: {}".format(t() - s))
-    s = t()
+    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get relationships: {}".format(t() - s))
+    # s = t()
 
     users = {}
 
@@ -827,8 +828,8 @@ def get_users_by_role_type(
             {"logger": None, **settings},
         )(user_ids=list(set(user_ids)), settings=settings)
 
-    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get users: {}".format(t() - s))
-    s = t()
+    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get users: {}".format(t() - s))
+    # s = t()
 
     # 4. User relations
     role_users = {}
@@ -871,8 +872,8 @@ def get_users_by_role_type(
 
             role_users[role_id][group_id].append(relationship)
 
-    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get user relationships: {}".format(t() - s))
-    s = t()
+    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get user relationships: {}".format(t() - s))
+    # s = t()
 
     # 5. Result
     results = []
@@ -905,8 +906,8 @@ def get_users_by_role_type(
                 }
             )
 
-    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Build results: {}".format(t() - s))
-    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
+    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Build results: {}".format(t() - s))
+    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Total spent: {}".format(t() - f))
 
     return results
 
@@ -998,7 +999,6 @@ def delete_relationships_by_condition(
 
         return True
     except Exception as e:
-        print(type(e), e)
         raise e
 
 

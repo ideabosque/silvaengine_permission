@@ -191,6 +191,7 @@ class Permission(object):
             group_id=params.get("group_id"),
         )
 
+    # Get user permissions
     def get_user_permissions(self, authorizer, channel, group_id=None, role_type=None, role_ids=None):
         return get_user_permissions(
             authorizer=authorizer, 
@@ -258,7 +259,7 @@ class Permission(object):
 
             # 2. save relationship.
             if type(roles.get(role_type)) is list and type(user_ids) is list:
-                for role in roles.get(role_type):
+                for role in roles.get(role_type,[]):
                     kwargs = {
                         "channel": str(channel).strip(),
                         "role_ids": [role.role_id],
@@ -471,6 +472,7 @@ class Permission(object):
         except Exception as e:
             raise e
 
+    # Get group IDs by user IDs and role IDs
     def get_group_ids_by_user_and_role_ids(self, channel, user_ids, relationship_type, role_types=None):
         try:
             if not user_ids or relationship_type is None:

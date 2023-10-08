@@ -19,7 +19,7 @@ __author__ = "bl"
 class BaseModel(Model):
     class Meta:
         billing_mode = "PAY_PER_REQUEST"
-        region = os.getenv("REGIONNAME", "us-west-2")
+        region = os.getenv("REGIONNAME")
         aws_access_key_id = os.getenv("aws_access_key_id")
         aws_secret_access_key = os.getenv("aws_secret_access_key")
 
@@ -28,13 +28,13 @@ class BaseModel(Model):
 
             if load_dotenv():
                 if region is None:
-                    region = os.getenv("region_name")
+                    region = os.getenv("REGION_NAME")
 
                 if aws_access_key_id is None:
-                    aws_access_key_id = os.getenv("aws_access_key_id")
+                    aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 
                 if aws_secret_access_key is None:
-                    aws_secret_access_key = os.getenv("aws_secret_access_key")
+                    aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 
 
 class TraitModel(BaseModel):
@@ -102,4 +102,4 @@ class RelationshipModel(TraitModel):
     role_id = UnicodeAttribute()
     group_id = UnicodeAttribute(null=True)
     status = BooleanAttribute(default=True)
-    is_default = UnicodeAttribute(null=True,default=False)
+    is_default = BooleanAttribute(null=True,default=False)

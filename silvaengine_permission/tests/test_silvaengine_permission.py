@@ -1,16 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-
-__author__ = "bl"
-
-
 from datetime import datetime, timedelta, date
 from decimal import Decimal
 from silvaengine_utility import Utility
 from dotenv import load_dotenv
 from os import path
 import logging, sys, unittest, uuid, os
+
+__author__ = "bl"
+
 
 load_dotenv()
 sys.path.insert(0, path.dirname(path.dirname(path.dirname(path.realpath(__file__)))))
@@ -20,11 +19,11 @@ from silvaengine_permission import Permission, RoleRelationshipType
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
 setting = {
-    "schema": os.getenv("DATABASE_SCHEMA"),
-    "user": os.getenv("DATABASE_USERNAME"),
-    "password": os.getenv("DATABASE_PASSWD"),
-    "host": os.getenv("DATABASE_HOST"),
-    "port": os.getenv("DATABASE_PORT"),
+    "schema": os.getenv("SCHEMA"),
+    "user": os.getenv("USER"),
+    "password": os.getenv("PASSWORD"),
+    "host": os.getenv("HOST"),
+    "port": os.getenv("PORT"),
     "region_name": os.getenv("REGION_NAME"),
     "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID"),
     "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
@@ -374,6 +373,8 @@ class SilvaEngineAuthTest(unittest.TestCase):
                     $userId: String!,
                     $updatedBy: String
                     $status: Boolean
+                    $relationshipType: Int!
+                    $isDefault: Boolean
                 ) {
                 createRelationship(
                     groupId: $groupId,
@@ -381,6 +382,8 @@ class SilvaEngineAuthTest(unittest.TestCase):
                     roleId: $roleId,
                     updatedBy: $updatedBy
                     status: $status
+                    relationshipType: $relationshipType
+                    isDefault: $isDefault
                 ) {
                     relationship{
                         relationshipId
@@ -394,13 +397,15 @@ class SilvaEngineAuthTest(unittest.TestCase):
             }
         """
         variables = {
-            "groupId": None,
-            "userId": "076de22a-6eed-4836-b4bb-ec06f1274311",
-            "roleId": "7774efc2-0a6e-11ec-9dc1-0242ac120002",
+            "relationshipType": 1,
+            "groupId": 357,
+            "userId": 2180,
+            "roleId": "69951970-46b0-11ed-992a-06ba6761df9c",
             "updatedBy": "setup",
             "status": True,
+            "isDefault": True
         }
-        payload = {"mutation": mutation, "variables": variables}
+        payload = {"query": mutation, "variables": variables}
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
@@ -464,12 +469,12 @@ class SilvaEngineAuthTest(unittest.TestCase):
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
-    @unittest.skip("demonstrating skipping")
+    # @unittest.skip("demonstrating skipping")
     def test_save_relationships(self):
         mutation = """
             mutation saveRelationships(
-                    $relationships: [RelationshipInputType]!
-                ) {
+                $relationships: [RelationshipInputType!]!
+            ) {
                 saveRelationships(
                     relationships: $relationships,
                 ) {
@@ -480,51 +485,52 @@ class SilvaEngineAuthTest(unittest.TestCase):
         variables = {
             "relationships": [
                 {
-                    "userId": 131,
-                    "type": 2,
-                    "groupId": "470",
-                    "roleId": "c2aeb298-3838-11ec-bbb5-2dc20eac8243",
+                    "userId": 2180,
+                    "type": 1,
+                    "groupId": "357",
+                    "roleId": "69951970-46b0-11ed-992a-06ba6761df9c",
+                    "isDefault": True,
                 },
-                {
-                    "userId": 131,
-                    "type": 2,
-                    "groupId": "479",
-                    "roleId": "1632a53b-3309-11ec-9501-1b1569b5c836",
-                },
+                # {
+                #     "userId": 131,
+                #     "type": 2,
+                #     "groupId": "479",
+                #     "roleId": "1632a53b-3309-11ec-9501-1b1569b5c836",
+                # },
             ]
         }
-        payload = {"mutation": mutation, "variables": variables}
+        payload = {"query": mutation, "variables": variables}
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
-    @unittest.skip("demonstrating skipping")
-    def test_certificate(self):
-        query = """
-            query certificate(
-                    $username: String!,
-                    $password: String!
-                ) {
-                certificate(
-                    username: $username,
-                    password: $password
-                ) {
-                   idToken
-                   refreshToken
-                   permissions
-                   context
-                   expiresIn
-                }
-            }
-        """
+    # @unittest.skip("demonstrating skipping")
+    # def test_certificate(self):
+    #     query = """
+    #         query certificate(
+    #                 $username: String!,
+    #                 $password: String!
+    #             ) {
+    #             certificate(
+    #                 username: $username,
+    #                 password: $password
+    #             ) {
+    #                idToken
+    #                refreshToken
+    #                permissions
+    #                context
+    #                expiresIn
+    #             }
+    #         }
+    #     """
 
-        variables = {
-            "username": os.getenv("test_username"),
-            "password": os.getenv("test_user_password"),
-        }
-        payload = {"query": query, "variables": variables}
-        response = self.instance.login_graphql(**payload)
-        print(response)
-        print("##############")
+    #     variables = {
+    #         "username": os.getenv("test_username"),
+    #         "password": os.getenv("test_user_password"),
+    #     }
+    #     payload = {"query": query, "variables": variables}
+    #     response = self.instance.login_graphql(**payload)
+    #     print(response)
+    #     print("##############")
 
     @unittest.skip("demonstrating skipping")
     def test_authorize(self):
@@ -818,7 +824,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
         )
         print("Response:", response)
 
-    # @unittest.skip("demonstrating skipping")
+    @unittest.skip("demonstrating skipping")
     def test_get_users(self):
         database_session = Utility.create_database_session(setting)
 
