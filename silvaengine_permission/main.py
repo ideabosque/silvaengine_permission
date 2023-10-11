@@ -129,7 +129,7 @@ class Permission(object):
     # Role interface by graphql
     def role_graphql(self, **params):
         try:
-            apply_to = params.get("endpoint_id", "ss3")
+            apply_to = params.get("endpoint_id", "api")
 
             if not apply_to:
                 raise Exception("Unrecognized request origin", 401)
