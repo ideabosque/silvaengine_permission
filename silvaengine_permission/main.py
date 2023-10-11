@@ -251,6 +251,7 @@ class Permission(object):
         user_ids,
         updated_by=None,
         by_group_id=False,
+        default_manager_id=None,
     ):
         try:
             operator_id = str(updated_by).strip() if updated_by else "0"
@@ -285,6 +286,7 @@ class Permission(object):
                                 "user_id": user_id,
                                 "updated_by": updated_by,
                                 "status": True,
+                                "is_default": default_manager_id == user_id,
                             }
 
                             if type(group_ids) is list:
