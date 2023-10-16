@@ -14,6 +14,7 @@ from .types import (
 )
 from .models import RelationshipModel, RoleModel
 from .enumerations import RoleType
+from copy import deepcopy
 
 # @TODO: Apply status check
 def resolve_roles(info, **kwargs):
@@ -399,7 +400,7 @@ def resolve_users(info, **kwargs):
                             "is_default_manager": relationship.is_default if relationship.is_default else False,
                         })
                         # user = users.get(str(relationship.user_id).strip())
-                        roles[str(relationship.role_id).strip()].users.append(users.get(str(relationship.user_id).strip()))
+                        roles[str(relationship.role_id).strip()].users.append(deepcopy(users.get(str(relationship.user_id).strip())))
 
         return SimilarUsersType(
             items=roles.values(),
