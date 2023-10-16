@@ -395,10 +395,9 @@ def resolve_users(info, **kwargs):
                         and users.get(str(relationship.user_id).strip())
                         and str(relationship.user_id).strip() not in user_ids
                     ):
-
-                        roles[str(relationship.role_id).strip()].users.append(
-                            users.get(str(relationship.user_id).strip())
-                        )
+                        user = users.get(str(relationship.user_id).strip())
+                        user["is_default"] = relationship.is_default if relationship.is_default else False
+                        roles[str(relationship.role_id).strip()].users.append(user)
 
         return SimilarUsersType(
             items=roles.values(),
