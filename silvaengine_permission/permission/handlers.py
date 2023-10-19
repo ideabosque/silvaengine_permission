@@ -7,6 +7,7 @@ from silvaengine_resource import ResourceModel
 from silvaengine_permission.permission.models import RelationshipModel, RoleModel
 from silvaengine_permission.permission.enumerations import RoleRelationshipType, RoleType
 from pynamodb.exceptions import DoesNotExist
+from copy import deepcopy
 import uuid, pendulum
 
 # Create role
@@ -846,6 +847,8 @@ def get_users_by_role_type(
             # relationship = jsonpickle.decode(
             #     jsonpickle.encode(relationship, unpicklable=False)
             # ).get("attribute_values", relationship)
+
+            is_default_manager = relationship.is_default if relationship.is_default else False
             relationship = {
                 "relationship_id": relationship.relationship_id,
                 "apply_to": relationship.apply_to,
@@ -854,10 +857,14 @@ def get_users_by_role_type(
                 "role_id": role_id,
                 "group_id": group_id,
                 "status": relationship.status,
+                "is_default": is_default_manager,
             }
 
             if relationship and user_id and users.get(user_id):
-                relationship.update({"user_base_info": users.get(user_id)})
+                users.get(user_id,{}).update({
+                    "is_default_manager": is_default_manager,
+                })
+                relationship.update({"user_base_info": deepcopy(users.get(user_id))})
 
             role_users[role_id][group_id].append(relationship)
 
