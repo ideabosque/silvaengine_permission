@@ -373,10 +373,7 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
             raise Exception("Missing required parameter(s)")
 
         # cognito_user_sub = authorizer.get("sub")
-        user_id = str(authorizer).strip()
-
-        # if authorizer is dict:
-        #     user_id = str(authorizer.get("user_id")).strip()
+        user_id = str(authorizer.get("user_id")).strip()
 
         if not user_id:
             return None
@@ -399,11 +396,6 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
         if relationship_type is not None:
             range_key_condition = (RelationshipModel.type == int(relationship_type))
 
-        print("hash key: ", str(channel).strip())
-        print("filter conditions: ", filter_conditions)
-        print("range key conditions: ",range_key_condition)
-        print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
         role_ids = [
             relationship.role_id
             for relationship in RelationshipModel.apply_to_type_index.query(
@@ -413,8 +405,6 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
                 attributes_to_get=["role_id","user_id"]
             )
         ]
-
-        print(role_ids)
 
         if len(role_ids) < 1:
             return None
