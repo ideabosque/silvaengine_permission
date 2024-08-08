@@ -107,17 +107,18 @@ def resolve_roles(info, **kwargs):
             "filter_condition": arguments.get("filter_condition"),
             "attributes_to_get": ["role_id"],
         }
+
         # Skip (int(kwargs.get("page_number", 0)) - 1) rows
         pagination_results = RoleModel.apply_to_type_index.query(**pagination_arguments)
         # Discard the results of the iteration, and extract the cursor of the page offset from the iterator.
-        _ = sum(1 for _ in pagination_results)
+        total = sum(1 for _ in pagination_results)
         # The iterator needs to be traversed first, and then the pagination cursor can be obtained through `last_evaluated_key` after the traversal is completed.
         if (
             not pagination_results.last_evaluated_key
             and pagination_results.total_count < pagination_offset
         ):
             return None
-
+        print(total)
         arguments["last_evaluated_key"] = pagination_results.last_evaluated_key
 
         # if arguments.get("last_evaluated_key") is None:

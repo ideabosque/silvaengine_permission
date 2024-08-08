@@ -44,58 +44,58 @@ class SilvaEngineAuthTest(unittest.TestCase):
     def test_get_roles_graphql(self):
         query = """
             query roles(
-                    $pageSize: Int
-                    $pageNumber: Int
-                    $isAdmin: Boolean
-                    $status: Boolean
-                    $description: String
-                    $type: Int
-                    $name: String
-                ){
-                roles(
-                    pageSize: $pageSize
-                    pageNumber: $pageNumber
-                    isAdmin: $isAdmin
-                    status: $status
-                    roleDescription: $description
-                    roleType: $type
-                    name: $name
-                ){
-                    items {
-                        roleId
-                        name
-                        permissions{
-                            resourceId
-                            permissions {
-                                operation
-                                operationName
-                                exclude
-                            }
+                $pageSize: Int
+                $pageNumber: Int
+                $isAdmin: Boolean
+                $status: Boolean
+                $description: String
+                $type: Int
+                $name: String
+            ){
+            roles(
+                pageSize: $pageSize
+                pageNumber: $pageNumber
+                isAdmin: $isAdmin
+                status: $status
+                roleDescription: $description
+                roleType: $type
+                name: $name
+            ){
+                items {
+                    roleId
+                    name
+                    permissions{
+                        resourceId
+                        permissions {
+                            operation
+                            operationName
+                            exclude
                         }
-                        description
-                        isAdmin
-                        status
-                        type
-                        createdAt
-                        updatedAt
-                        updatedBy
                     }
-                    pageSize
-                    pageNumber
-                    total
+                    description
+                    isAdmin
+                    status
+                    type
+                    createdAt
+                    updatedAt
+                    updatedBy
                 }
+                pageSize
+                pageNumber
+                total
             }
+        }
         """
         variables = {
             "pageSize": 10,
-            "pageNumber": 2,
+            "pageNumber": 3,
             # "isAdmin": True,
             # "status": True,
             # "description": None,
             # "type": 0,
             # "name": None,
         }
-        payload = {"query": query, "variables": variables}
+        payload = {"query": query, "variables": variables, "endpoint_id": "ss3"}
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
