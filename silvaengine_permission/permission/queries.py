@@ -111,14 +111,14 @@ def resolve_roles(info, **kwargs):
         # Skip (int(kwargs.get("page_number", 0)) - 1) rows
         pagination_results = RoleModel.apply_to_type_index.query(**pagination_arguments)
         # Discard the results of the iteration, and extract the cursor of the page offset from the iterator.
-        total = sum(1 for _ in pagination_results)
+        _ = sum(1 for _ in pagination_results)
         # The iterator needs to be traversed first, and then the pagination cursor can be obtained through `last_evaluated_key` after the traversal is completed.
         if (
             not pagination_results.last_evaluated_key
             and pagination_results.total_count < pagination_offset
         ):
             return None
-        print(total)
+        
         arguments["last_evaluated_key"] = pagination_results.last_evaluated_key
 
         # if arguments.get("last_evaluated_key") is None:
@@ -155,14 +155,11 @@ def resolve_roles(info, **kwargs):
             items=roles,
             page_number=page_number,
             page_size=arguments.get("limit"),
-            total=len(
-                [
-                    role.role_id
-                    for role in RoleModel.apply_to_type_index.query(
-                        hash_key= arguments.get("hash_key"),
-                        filter_condition=arguments.get("filter_condition")
-                    )
-                ]
+            total=sum(1 for _ in RoleModel.apply_to_type_index.query(
+                    hash_key= arguments.get("hash_key"),
+                    filter_condition=arguments.get("filter_condition"),
+                    attributes_to_get=["role_id"]
+                )
             ),
         )
     except Exception as e:
@@ -450,12 +447,11 @@ def resolve_detection(info, **kwargs):
 
     for role in RoleModel.apply_to_type_index.query(
         hash_key=str(info.context.get("apply_to")).strip(),
-        range_key_condition=(RoleModel.type.is_in(*role_types)),
         filter_condition=filter_conditions,
     ):
         role = role.__dict__["attribute_values"]
 
-        if role.get("type") is not None:
+        if role.get("type") in role_types:
             if roles.get(role.get("type")) is None and types.get(role.get("type")):
                 roles[role.get("type")] = types.get(role.get("type"))
 

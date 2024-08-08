@@ -709,14 +709,13 @@ def get_users_by_role_type(
         (RoleModel.is_admin == True)
         & (RoleModel.status == True)
     )
-    roles = {
-        str(role.role_id).strip(): role
-        for role in RoleModel.apply_to_type_index.query(
-            hash_key=str(channel).strip(),
-            range_key_condition=(RoleModel.type.is_in(*role_types)),
-            filter_condition=role_filter_condition,
-        )
-    }
+    roles = {}
+    for role in RoleModel.apply_to_type_index.query(
+        hash_key=str(channel).strip(),
+        filter_condition=role_filter_condition,
+    ):
+        if role.type in role_types:
+            roles[str(role.role_id).strip()] = role
 
     if not len(roles):
         raise Exception("No roles", 500)
@@ -834,7 +833,6 @@ def get_users_by_role_type(
             results.append(
                 {
                     "groups": role_users.get(str(role_id).strip()),
-                    "permissions": None,
                     "role_id": role.role_id,
                     "apply_to": role.apply_to,
                     "type": role.type,
@@ -873,13 +871,13 @@ def get_roles_by_type(types, channel, status=None, is_admin=None) -> dict:
 
             for role in RoleModel.apply_to_type_index.query(
                 hash_key=str(channel).strip(),
-                range_key_condition=RoleModel.type.is_in(*types),
                 filter_condition=filter_condition,
             ):
-                if type(roles.get(role.type)) is not list:
-                    roles[role.type] = []
+                if role.type in types:
+                    if type(roles.get(role.type)) is not list:
+                        roles[role.type] = []
 
-                roles[role.type].append(role)
+                    roles[role.type].append(role)
 
         return roles
     except Exception as e:
