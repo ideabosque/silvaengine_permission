@@ -19,49 +19,7 @@ def create_role_handler(channel, kwargs):
             channel=channel,
             permissions=kwargs.get("permissions", []),
         )
-        # resources = {}
-        # results = Utility.json_loads(
-        #     Utility.json_dumps(
-        #         [
-        #             resource
-        #             for resource in ResourceModel.scan(
-        #                 filter_condition=ResourceModel.apply_to == str(channel).strip()
-        #             )
-        #         ]
-        #     )
-        # )
-
-        # for resource in results:
-        #     operations = []
-
-        #     for operation, items in resource.get("operations", {}).items():
-        #         for item in items:
-        #             if item.get("visible") == False:
-        #                 operations.append(
-        #                     {
-        #                         "operation_name": item.get("action"),
-        #                         "operation": str(operation).strip(),
-        #                         "exclude": [],
-        #                     }
-        #                 )
-
-        #     if len(operations):
-        #         resources[resource.get("resource_id")] = operations
-
-        # for rule in permissions:
-        #     if rule.get("resource_id") and resources.get(rule.get("resource_id")):
-        #         rule["permissions"] += resources.get(rule.get("resource_id"))
-        #         resources.pop(rule.get("resource_id"))
-
-        # if len(resources):
-        #     for resource_id, items in resources.items():
-        #         permissions.append(
-        #             {
-        #                 "resource_id": resource_id,
-        #                 "permissions": items,
-        #             }
-        #         )
-
+        
         RoleModel(
             role_id,
             **{
@@ -156,7 +114,6 @@ def create_relationship_handler(channel, operator_id, kwargs):
             set(
                 [
                     str(item.relationship_id).strip()
-                    # for item in RelationshipModel.scan(
                     for item in RelationshipModel.apply_to_type_index.query(
                         hash_key=str(channel).strip(),
                         range_key_condition=(
@@ -401,8 +358,9 @@ def get_roles(user_id, channel, is_admin, group_id):
         return Utility.json_dumps(
             [
                 role
-                for role in RoleModel.scan(
-                    RoleModel.role_id.is_in(*list(set(role_ids)))
+                for role in RoleModel.apply_to_type_index.query(
+                    hash_key=str(channel).strip(),
+                    filter_condition=RoleModel.role_id.is_in(*list(set(role_ids)))
                 )
             ]
         )
@@ -458,9 +416,9 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
         rules = []
         result = {}
 
-        for role in RoleModel.scan(
-            (RoleModel.role_id.is_in(*list(set(role_ids))))
-            & (RoleModel.apply_to == str(channel).strip())
+        for role in RoleModel.apply_to_type_index.query(
+            hash_key=str(channel).strip(),
+            filter_condition=(RoleModel.role_id.is_in(*list(set(role_ids))))
         ):
             rules += role.permissions
 
@@ -470,9 +428,9 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
         if len(resource_ids) < 1:
             return None
 
-        for resource in ResourceModel.scan(
-            (ResourceModel.resource_id.is_in(*resource_ids))
-            & (ResourceModel.apply_to == str(channel).strip())
+        for resource in ResourceModel.apply_to_resource_id_index.query(
+            hash_key=str(channel).strip(),
+            range_key_condition=(ResourceModel.resource_id.is_in(*resource_ids)),
         ):
             resources[resource.resource_id] = resource
 
@@ -633,7 +591,6 @@ def get_roles_by_user_id(
     role_ids = []
     relationships = []
 
-    # for relationship in RelationshipModel.scan(**arguments):
     for relationship in RelationshipModel.apply_to_type_index.query(**arguments):
         relationships.append(relationship)
 
@@ -648,26 +605,10 @@ def get_roles_by_user_id(
         role_ids = list(set(role_ids))
 
         for ids in [role_ids[i : i + 90] for i in range(0, len(role_ids), 90)]:
-            for role in RoleModel.scan(
-                (RoleModel.role_id.is_in(*ids))
-                & (RoleModel.apply_to == str(channel).strip())
+            for role in RoleModel.apply_to_type_index.query(
+                hash_key=str(channel).strip(),
+                filter_condition=(RoleModel.role_id.is_in(*ids)),
             ):
-                # role = Utility.json_loads(
-                #     Utility.json_dumps(role.__dict__["attribute_values"])
-                # )
-
-                # if role.get("permissions") and ignore_permissions:
-                #     del role["permissions"]
-                # if ignore_permissions:
-                #     setattr(role, "permissions", None)
-
-                # if role.get("role_id") and role.get("name"):
-                #     roles[role.get("role_id")] = {
-                #         "name": role.get("name"),
-                #         "id": role.get("role_id"),
-                #         "type": role.get("type"),
-                #     }
-
                 if role.role_id and role.name:
                     roles[role.role_id] = {
                         "name": role.name,
@@ -768,13 +709,15 @@ def get_users_by_role_type(
 
     role_filter_condition = (
         (RoleModel.is_admin == True)
-        & (RoleModel.apply_to == str(channel).strip())
         & (RoleModel.status == True)
-        & (RoleModel.type.is_in(*role_types))
     )
     roles = {
         str(role.role_id).strip(): role
-        for role in RoleModel.scan(filter_condition=role_filter_condition)
+        for role in RoleModel.apply_to_type_index.query(
+            hash_key=str(channel).strip(),
+            range_key_condition=(RoleModel.type.is_in(*role_types)),
+            filter_condition=role_filter_condition,
+        )
     }
 
     if not len(roles):
@@ -811,12 +754,15 @@ def get_users_by_role_type(
     users = {}
 
     if len(user_ids):
-        users = Utility.import_dynamically(
+        fn = Utility.import_dynamically(
             "user_engine",
             "get_users_by_ids",
             "UserEngine",
             {"logger": None, **settings},
-        )(user_ids=list(set(user_ids)), settings=settings)
+        )
+
+        if callable(fn):
+            users = fn(user_ids=list(set(user_ids)), settings=settings)
 
     # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Get users: {}".format(t() - s))
     # s = t()
@@ -913,17 +859,25 @@ def get_roles_by_type(types, channel, status=None, is_admin=None) -> dict:
 
         if type(types) is list and len(types) and channel:
             types = list(set([int(role_type) for role_type in types]))
-            filter_condition = (RoleModel.type.is_in(*types)) & (
-                RoleModel.apply_to == str(channel).strip()
-            )
+            filter_condition = None
 
             if type(status) is bool:
-                filter_condition = filter_condition & (RoleModel.status == status)
+                if filter_condition is None:
+                    filter_condition = (RoleModel.status == status)
+                else:
+                    filter_condition = filter_condition & (RoleModel.status == status)
 
             if type(is_admin) is bool:
-                filter_condition = filter_condition & (RoleModel.is_admin == is_admin)
+                if filter_condition is None:
+                    filter_condition = (RoleModel.is_admin == is_admin)
+                else:
+                    filter_condition = filter_condition & (RoleModel.is_admin == is_admin)
 
-            for role in RoleModel.scan(filter_condition=filter_condition):
+            for role in RoleModel.apply_to_type_index.query(
+                hash_key=str(channel).strip(),
+                range_key_condition=RoleModel.type.is_in(*types),
+                filter_condition=filter_condition,
+            ):
                 if type(roles.get(role.type)) is not list:
                     roles[role.type] = []
 
@@ -961,23 +915,20 @@ def delete_relationships_by_condition(
             )
 
         filter_conditions = [
-            RelationshipModel.type == int(relationship_type),
-            RelationshipModel.apply_to == str(channel).strip(),
+            # RelationshipModel.type == int(relationship_type),
+            # RelationshipModel.apply_to == str(channel).strip(),
         ]
 
         if type(group_ids) is list and len(group_ids):
             group_ids = list(set([str(group_id).strip() for group_id in group_ids]))
-
             filter_conditions.append(RelationshipModel.group_id.is_in(*group_ids))
 
         if type(role_ids) is list and len(role_ids):
             role_ids = list(set([str(role_id).strip() for role_id in role_ids]))
-
             filter_conditions.append(RelationshipModel.role_id.is_in(*role_ids))
 
         if type(user_ids) is list and len(user_ids):
             user_ids = list(set([str(user_id).strip() for user_id in user_ids]))
-
             filter_conditions.append(RelationshipModel.user_id.is_in(*user_ids))
 
         filter_condition = None
@@ -988,7 +939,11 @@ def delete_relationships_by_condition(
             for condition in filter_conditions:
                 filter_condition = filter_condition & (condition)
 
-        for relationship in RelationshipModel.scan(filter_condition=filter_condition):
+        for relationship in RelationshipModel.apply_to_type_index.query(
+            hash_key=str(channel).strip(),
+            range_key_condition=RelationshipModel.type == int(relationship_type),
+            filter_condition=filter_condition,
+        ):
             relationship.delete()
 
         return True
@@ -1044,16 +999,16 @@ def check_user_permissions(
         ### 1. Check user & team relationship exists.
         filter_condition = (
             (RelationshipModel.user_id == str(user_id).strip())
-            & (RelationshipModel.apply_to == str(channel).strip())
             & (RelationshipModel.group_id == str(group_id).strip())
-            & (RelationshipModel.type == int(relationship_type))
         )
         role_ids = list(
             set(
                 [
                     relationship.role_id
-                    for relationship in RelationshipModel.scan(
-                        filter_condition=filter_condition
+                    for relationship in RelationshipModel.apply_to_type_index.query(
+                        hash_key=str(channel).strip(),
+                        range_key_condition=RelationshipModel.type == int(relationship_type),
+                        filter_condition=filter_condition,
                     )
                     if relationship.role_id
                 ]
@@ -1071,9 +1026,12 @@ def check_user_permissions(
         for i in range(0, len(role_ids), max_length):
             filter_condition = (
                 RoleModel.role_id.is_in(*role_ids[i : i + max_length])
-            ) & (RoleModel.apply_to == str(channel).strip())
+            )
 
-            for role in RoleModel.scan(filter_condition=filter_condition):
+            for role in RoleModel.apply_to_type_index.query(
+                hash_key=str(channel).strip(),
+                filter_condition=filter_condition,
+            ):
                 if (
                     role.permissions
                     and type(role.permissions) is list
@@ -1087,7 +1045,6 @@ def check_user_permissions(
         ### 2. Get resources.
         filter_condition = (
             (ResourceModel.module_name == str(module_name).strip())
-            & (ResourceModel.apply_to == str(channel).strip())
             & (ResourceModel.class_name == str(class_name).strip())
             & (ResourceModel.function == str(function_name).strip())
         )
@@ -1095,7 +1052,8 @@ def check_user_permissions(
             set(
                 [
                     str(resource.resource_id).strip()
-                    for resource in ResourceModel.scan(
+                    for resource in ResourceModel.apply_to_resource_id_index.query(
+                        hash_key= str(channel).strip(),
                         filter_condition=filter_condition
                     )
                     if resource.resource_id
@@ -1132,8 +1090,8 @@ def _get_unvisible_permissions(channel, permissions):
         Utility.json_dumps(
             [
                 resource
-                for resource in ResourceModel.scan(
-                    filter_condition=ResourceModel.apply_to == str(channel).strip()
+                for resource in ResourceModel.apply_to_resource_id_index.query(
+                    hash_key=str(channel).strip()
                 )
             ]
         )

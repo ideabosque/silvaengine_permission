@@ -20,6 +20,7 @@ from copy import deepcopy
 def resolve_roles(info, **kwargs):
     try:
         arguments = {
+            "hash_key": str(info.context.get("apply_to")).strip(),
             "limit": int(
                 kwargs.get(
                     "page_size",
@@ -40,7 +41,7 @@ def resolve_roles(info, **kwargs):
             "role_type": "type",
             "status": "status",
         }
-        filter_conditions = [(RoleModel.apply_to == info.context.get("apply_to"))]
+        filter_conditions = []
 
         # Get filter condition from arguments
         # @TODO: If there is an operation such as `is_in`, this method or mapping must be extended`
@@ -61,16 +62,16 @@ def resolve_roles(info, **kwargs):
                     (getattr(RoleModel, field) == kwargs.get(argument))
                 )
 
-        if kwargs.get("user_ids"):
+        if kwargs.get("user_ids") is list:
             role_ids = [
                 str(relationship.role_id).strip()
-                for relationship in RelationshipModel.scan(
-                    (
+                for relationship in RelationshipModel.apply_to_type_index.query(
+                    hash_key=info.context.get("apply_to"),
+                    filter_condition=(
                         RelationshipModel.role_id.is_in(
-                            *list(set(kwargs.get("user_ids")))
+                            *list(set(kwargs.get("user_ids",[])))
                         )
                     )
-                    & (RelationshipModel.apply_to == info.context.get("apply_to"))
                 )
             ]
 
@@ -100,13 +101,14 @@ def resolve_roles(info, **kwargs):
             pagination_offset = (page_number - 1) * int(arguments.get("limit",0))
 
         pagination_arguments = {
+            "hash_key": str(info.context.get("apply_to")).strip(),
             "limit": pagination_offset if pagination_offset > 0 else None,
             "last_evaluated_key": None,
             "filter_condition": arguments.get("filter_condition"),
             "attributes_to_get": ["role_id"],
         }
         # Skip (int(kwargs.get("page_number", 0)) - 1) rows
-        pagination_results = RoleModel.scan(**pagination_arguments)
+        pagination_results = RoleModel.apply_to_type_index.query(**pagination_arguments)
         # Discard the results of the iteration, and extract the cursor of the page offset from the iterator.
         _ = sum(1 for _ in pagination_results)
         # The iterator needs to be traversed first, and then the pagination cursor can be obtained through `last_evaluated_key` after the traversal is completed.
@@ -122,7 +124,7 @@ def resolve_roles(info, **kwargs):
         #     return None
 
         # Query role form database.
-        results = RoleModel.scan(**arguments)
+        results = RoleModel.apply_to_type_index.query(**arguments)
         roles = [
             OutputRoleType(
                 # **Utility.json_loads(
@@ -155,7 +157,8 @@ def resolve_roles(info, **kwargs):
             total=len(
                 [
                     role.role_id
-                    for role in RoleModel.scan(
+                    for role in RoleModel.apply_to_type_index.query(
+                        hash_key= arguments.get("hash_key"),
                         filter_condition=arguments.get("filter_condition")
                     )
                 ]
@@ -170,6 +173,7 @@ def resolve_roles(info, **kwargs):
 def resolve_users(info, **kwargs):
     try:
         arguments = {
+            "hash_key": info.context.get("apply_to"),
             "limit": int(
                 kwargs.get(
                     "page_size",
@@ -192,7 +196,7 @@ def resolve_users(info, **kwargs):
             "role_name": "name",
             "role_id": "role_id",
         }
-        role_filter_conditions = [(RoleModel.apply_to == info.context.get("apply_to"))]
+        role_filter_conditions = []
 
         # eq: Get filter condition from arguments for Roles
         for argument, field in role_field_argument_mappings_eq.items():
@@ -228,6 +232,7 @@ def resolve_users(info, **kwargs):
         # Pagination.
         if arguments.get("limit",0) > 0 and kwargs.get("page_number", 0) > 1:
             pagination_arguments = {
+                "hash_key": info.context.get("apply_to"),
                 "limit": (int(kwargs.get("page_number", 0)) - 1)
                 * arguments.get("limit",0),
                 "last_evaluated_key": None,
@@ -236,7 +241,7 @@ def resolve_users(info, **kwargs):
             }
 
             # Skip (int(kwargs.get("page_number", 0)) - 1) rows
-            pagination_results = RoleModel.scan(**pagination_arguments)
+            pagination_results = RoleModel.apply_to_type_index.query(**pagination_arguments)
             # Discard the results of the iteration, and extract the cursor of the page offset from the iterator.
             _ = sum(1 for _ in pagination_results)
             arguments["last_evaluated_key"] = pagination_results.last_evaluated_key
@@ -250,7 +255,7 @@ def resolve_users(info, **kwargs):
         # Count total of roles
         roles = {}
 
-        for role in RoleModel.scan(**arguments):
+        for role in RoleModel.apply_to_type_index.query(**arguments):
             if role:
                 roles[role.role_id] = SimilarUserType(
                     users=[],
@@ -279,7 +284,6 @@ def resolve_users(info, **kwargs):
             return None
 
         relatinship_filter_conditions = [
-            (RelationshipModel.apply_to == info.context.get("apply_to")),
             (RelationshipModel.role_id.is_in(*roles.keys())),
         ]
         # Relationship model
@@ -324,7 +328,10 @@ def resolve_users(info, **kwargs):
                 filter_condition = filter_condition & condition
 
         # Query data from the database.
-        results = RelationshipModel.scan(filter_condition=filter_condition)
+        results = RelationshipModel.apply_to_type_index.query(
+            hash_key=str(info.context.get("apply_to")).strip(),
+            filter_condition=filter_condition,
+        )
         relationships = [
             UserRelationshipType(
                 **{
@@ -429,11 +436,7 @@ def resolve_detection(info, **kwargs):
         RoleType.QC_MANAGER.value,
         RoleType.DEPT_MANAGER.value,
     ]
-    filter_conditions = (
-        (RoleModel.name == role_name)
-        if role_name
-        else (RoleModel.type.is_in(*role_types))
-    ) & (RoleModel.apply_to == info.context.get("apply_to"))
+    filter_conditions = (RoleModel.name == role_name)
     types = {
         t.value: {
             "type_alias": t.name,
@@ -444,7 +447,11 @@ def resolve_detection(info, **kwargs):
     }
     roles = {}
 
-    for role in RoleModel.scan(filter_condition=filter_conditions):
+    for role in RoleModel.apply_to_type_index.query(
+        hash_key=str(info.context.get("apply_to")).strip(),
+        range_key_condition=(RoleModel.type.is_in(*role_types)),
+        filter_condition=filter_conditions,
+    ):
         role = role.__dict__["attribute_values"]
 
         if role.get("type") is not None:
