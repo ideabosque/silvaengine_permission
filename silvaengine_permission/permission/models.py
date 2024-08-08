@@ -15,7 +15,7 @@ import os
 
 __author__ = "bl"
 
-class ApplyToTypeIndex(GlobalSecondaryIndex):
+class IndexRoleByApplyToType(GlobalSecondaryIndex):
     """
     This class represents a local secondary index
     """
@@ -28,6 +28,34 @@ class ApplyToTypeIndex(GlobalSecondaryIndex):
 
     apply_to = UnicodeAttribute(hash_key=True)
     type = NumberAttribute(range_key=True)
+
+class IndexRelationshipByApplyToType(GlobalSecondaryIndex):
+    """
+    This class represents a local secondary index
+    """
+
+    class Meta:
+        billing_mode = "PAY_PER_REQUEST"
+        # All attributes are projected
+        projection = AllProjection()
+        index_name = "apply_to-type-index"
+
+    apply_to = UnicodeAttribute(hash_key=True)
+    type = NumberAttribute(range_key=True)
+
+class IndexResourceByApplyToResourceId(GlobalSecondaryIndex):
+    """
+    This class represents a local secondary index
+    """
+
+    class Meta:
+        billing_mode = "PAY_PER_REQUEST"
+        # All attributes are projected
+        projection = AllProjection()
+        index_name = "apply_to-resource_id-index"
+
+    apply_to = UnicodeAttribute(hash_key=True)
+    resource_id = UnicodeAttribute(range_key=True)
 
 
 class BaseModel(Model):
@@ -77,7 +105,7 @@ class RoleModel(TraitModel):
     class Meta(TraitModel.Meta):
         table_name = "se-roles"
 
-    apply_to_type_index = ApplyToTypeIndex()
+    apply_to_type_index = IndexRoleByApplyToType()
     role_id = UnicodeAttribute(hash_key=True)
     apply_to = UnicodeAttribute()
     # type: 0 - Normal, 1 - GWI Account Manger, 2 - GWI QC Manager
@@ -93,7 +121,7 @@ class RelationshipModel(TraitModel):
     class Meta(TraitModel.Meta):
         table_name = "se-relationships"
 
-    apply_to_type_index = ApplyToTypeIndex()
+    apply_to_type_index = IndexRelationshipByApplyToType()
     relationship_id = UnicodeAttribute(hash_key=True)
     apply_to = UnicodeAttribute()
     # type: 0 - amdin, 1 - Seller, 2 - team
@@ -103,3 +131,32 @@ class RelationshipModel(TraitModel):
     group_id = UnicodeAttribute(null=True)
     status = BooleanAttribute(default=True)
     is_default = BooleanAttribute(null=True,default=False)
+
+class ResourceOperationItemMap(MapAttribute):
+    label = UnicodeAttribute()
+    action = UnicodeAttribute()
+    visible = BooleanAttribute(null=True, default=True)
+
+
+class ResourceOperationMap(MapAttribute):
+    query = ListAttribute(of=ResourceOperationItemMap)
+    mutation = ListAttribute(of=ResourceOperationItemMap)
+
+
+class ResourceModel(BaseModel):
+    class Meta(BaseModel.Meta):
+        table_name = "se-resources"
+
+    apply_to_resource_id_index = IndexResourceByApplyToResourceId()
+    apply_to = UnicodeAttribute()
+    resource_id = UnicodeAttribute(hash_key=True)
+    service = UnicodeAttribute(range_key=True)
+    module_name = UnicodeAttribute()
+    class_name = UnicodeAttribute()
+    function = UnicodeAttribute()
+    label = UnicodeAttribute()
+    status = NumberAttribute()
+    operations = ResourceOperationMap()
+    created_at = UTCDateTimeAttribute()
+    updated_at = UTCDateTimeAttribute()
+    updated_by = UnicodeAttribute(default="Setup")

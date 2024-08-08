@@ -3,8 +3,7 @@
 from __future__ import print_function
 from datetime import datetime
 from silvaengine_utility import Utility
-from silvaengine_resource import ResourceModel
-from silvaengine_permission.permission.models import RelationshipModel, RoleModel
+from silvaengine_permission.permission.models import RelationshipModel, RoleModel, ResourceModel
 from silvaengine_permission.permission.enumerations import RoleRelationshipType, RoleType
 from pynamodb.exceptions import DoesNotExist
 from copy import deepcopy
@@ -374,21 +373,24 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
             raise Exception("Missing required parameter(s)")
 
         # cognito_user_sub = authorizer.get("sub")
-        user_id = str(authorizer.get("user_id")).strip()
+        user_id = str(authorizer).strip()
+
+        # if authorizer is dict:
+        #     user_id = str(authorizer.get("user_id")).strip()
 
         if not user_id:
             return None
 
         # Query user / group / role relationships
-        filter_conditions = RelationshipModel.user_id == user_id
+        filter_conditions = (RelationshipModel.user_id == user_id)
 
         if group_id is not None:
-            filter_conditions = (filter_conditions) & (
+            filter_conditions = filter_conditions & (
                 RelationshipModel.group_id == str(group_id).strip()
             )
 
         if type(role_ids) is list:
-            filter_conditions = (filter_conditions) & (
+            filter_conditions = filter_conditions & (
                 RelationshipModel.role_id.is_in(*list(set(role_ids)))
             )
 
@@ -397,9 +399,10 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
         if relationship_type is not None:
             range_key_condition = (RelationshipModel.type == int(relationship_type))
 
-        # print("filter conditions: ", filter_conditions)
-        # print("range key conditions: ",range_key_condition)
-        # print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+        print("hash key: ", str(channel).strip())
+        print("filter conditions: ", filter_conditions)
+        print("range key conditions: ",range_key_condition)
+        print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
         role_ids = [
             relationship.role_id
@@ -407,8 +410,11 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
                 hash_key=str(channel).strip(),
                 range_key_condition=range_key_condition,
                 filter_condition=filter_conditions,
+                attributes_to_get=["role_id","user_id"]
             )
         ]
+
+        print(role_ids)
 
         if len(role_ids) < 1:
             return None
@@ -427,12 +433,14 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
 
         if len(resource_ids) < 1:
             return None
+        
 
         for resource in ResourceModel.apply_to_resource_id_index.query(
             hash_key=str(channel).strip(),
-            range_key_condition=(ResourceModel.resource_id.is_in(*resource_ids)),
+            # range_key_condition=(ResourceModel.resource_id.is_in(*resource_ids)),
         ):
-            resources[resource.resource_id] = resource
+            if resource.resource_id in resource_ids:
+                resources[resource.resource_id] = resource
 
         for rule in rules:
             resource_id = rule.resource_id.strip()
