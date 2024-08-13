@@ -7,8 +7,17 @@ from silvaengine_resource import ResourceModel
 from silvaengine_permission.permission.models import RelationshipModel, RoleModel
 from silvaengine_permission.permission.enumerations import RoleRelationshipType, RoleType
 from pynamodb.exceptions import DoesNotExist
+from boto3.dynamodb.conditions import Key
 from copy import deepcopy
-import uuid, pendulum
+import uuid
+
+def runtime_debug(mark, t=0):
+    if t > 0:
+        d = int(datetime.now().timestamp() * 1000) - t
+
+        if d > 0:
+            print("********** It took {} ms to execute `LambdaBase.{}`.".format(d, mark))
+    return int(datetime.now().timestamp() * 1000)
 
 # Create role
 def create_role_handler(channel, kwargs):
@@ -19,49 +28,6 @@ def create_role_handler(channel, kwargs):
             channel=channel,
             permissions=kwargs.get("permissions", []),
         )
-        # resources = {}
-        # results = Utility.json_loads(
-        #     Utility.json_dumps(
-        #         [
-        #             resource
-        #             for resource in ResourceModel.scan(
-        #                 filter_condition=ResourceModel.apply_to == str(channel).strip()
-        #             )
-        #         ]
-        #     )
-        # )
-
-        # for resource in results:
-        #     operations = []
-
-        #     for operation, items in resource.get("operations", {}).items():
-        #         for item in items:
-        #             if item.get("visible") == False:
-        #                 operations.append(
-        #                     {
-        #                         "operation_name": item.get("action"),
-        #                         "operation": str(operation).strip(),
-        #                         "exclude": [],
-        #                     }
-        #                 )
-
-        #     if len(operations):
-        #         resources[resource.get("resource_id")] = operations
-
-        # for rule in permissions:
-        #     if rule.get("resource_id") and resources.get(rule.get("resource_id")):
-        #         rule["permissions"] += resources.get(rule.get("resource_id"))
-        #         resources.pop(rule.get("resource_id"))
-
-        # if len(resources):
-        #     for resource_id, items in resources.items():
-        #         permissions.append(
-        #             {
-        #                 "resource_id": resource_id,
-        #                 "permissions": items,
-        #             }
-        #         )
-
         RoleModel(
             role_id,
             **{
@@ -398,7 +364,8 @@ def get_roles(user_id, channel, is_admin, group_id):
         if len(role_ids) < 1:
             raise Exception("The current user is not assigned any role", 403)
 
-        return Utility.json_dumps(
+        ts = runtime_debug("silvaengine permission: get roles")
+        r = Utility.json_dumps(
             [
                 role
                 for role in RoleModel.scan(
@@ -406,6 +373,9 @@ def get_roles(user_id, channel, is_admin, group_id):
                 )
             ]
         )
+        ts = runtime_debug("silvaengine permission: get roles",t=ts)
+
+        return r
     except Exception as e:
         raise e
 
