@@ -16,7 +16,7 @@ def runtime_debug(mark, t=0):
         d = int(datetime.now().timestamp() * 1000) - t
 
         if d > 0:
-            print("********** It took {} ms to execute `LambdaBase.{}`.".format(d, mark))
+            print("********** It took {} ms to handle {}.".format(d, mark))
     return int(datetime.now().timestamp() * 1000)
 
 # Create role
