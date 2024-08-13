@@ -368,8 +368,9 @@ def get_roles(user_id, channel, is_admin, group_id):
         r = Utility.json_dumps(
             [
                 role
-                for role in RoleModel.scan(
-                    RoleModel.role_id.is_in(*list(set(role_ids)))
+                for role in RoleModel.apply_to_type_index.query(
+                    hash_key=channel,
+                    filter_condition=RoleModel.role_id.is_in(*list(set(role_ids)))
                 )
             ]
         )

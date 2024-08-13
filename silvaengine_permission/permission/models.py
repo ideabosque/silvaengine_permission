@@ -16,6 +16,48 @@ import os
 __author__ = "bl"
 
 
+class IndexRoleByApplyToType(GlobalSecondaryIndex):
+    """
+    This class represents a local secondary index
+    """
+
+    class Meta:
+        billing_mode = "PAY_PER_REQUEST"
+        # All attributes are projected
+        projection = AllProjection()
+        index_name = "apply_to-type-index"
+
+    apply_to = UnicodeAttribute(hash_key=True)
+    type = NumberAttribute(range_key=True)
+
+class IndexRelationshipByApplyToType(GlobalSecondaryIndex):
+    """
+    This class represents a local secondary index
+    """
+
+    class Meta:
+        billing_mode = "PAY_PER_REQUEST"
+        # All attributes are projected
+        projection = AllProjection()
+        index_name = "apply_to-type-index"
+
+    apply_to = UnicodeAttribute(hash_key=True)
+    type = NumberAttribute(range_key=True)
+
+class IndexResourceByApplyToResourceId(GlobalSecondaryIndex):
+    """
+    This class represents a local secondary index
+    """
+
+    class Meta:
+        billing_mode = "PAY_PER_REQUEST"
+        # All attributes are projected
+        projection = AllProjection()
+        index_name = "apply_to-resource_id-index"
+
+    apply_to = UnicodeAttribute(hash_key=True)
+    resource_id = UnicodeAttribute(range_key=True)
+
 class BaseModel(Model):
     class Meta:
         billing_mode = "PAY_PER_REQUEST"
@@ -63,6 +105,7 @@ class RoleModel(TraitModel):
     class Meta(TraitModel.Meta):
         table_name = "se-roles"
 
+    apply_to_type_index = IndexRoleByApplyToType()
     role_id = UnicodeAttribute(hash_key=True)
     apply_to = UnicodeAttribute()
     # type: 0 - Normal, 1 - GWI Account Manger, 2 - GWI QC Manager
@@ -74,27 +117,12 @@ class RoleModel(TraitModel):
     status = BooleanAttribute(default=True)
 
 
-class ApplyToTypeIndex(GlobalSecondaryIndex):
-    """
-    This class represents a local secondary index
-    """
-
-    class Meta:
-        billing_mode = "PAY_PER_REQUEST"
-        # All attributes are projected
-        projection = AllProjection()
-        index_name = "apply_to-type-index"
-
-    apply_to = UnicodeAttribute(hash_key=True)
-    type = NumberAttribute(range_key=True)
-
-
 class RelationshipModel(TraitModel):
     class Meta(TraitModel.Meta):
         table_name = "se-relationships"
 
     relationship_id = UnicodeAttribute(hash_key=True)
-    apply_to_type_index = ApplyToTypeIndex()
+    apply_to_type_index = IndexRelationshipByApplyToType()
     apply_to = UnicodeAttribute()
     # type: 0 - amdin, 1 - Seller, 2 - team
     type = NumberAttribute(default=0)
