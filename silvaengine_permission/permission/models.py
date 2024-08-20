@@ -58,6 +58,48 @@ class IndexResourceByApplyToResourceId(GlobalSecondaryIndex):
     resource_id = UnicodeAttribute(range_key=True)
 
 
+class IndexRoleByApplyToType(GlobalSecondaryIndex):
+    """
+    This class represents a local secondary index
+    """
+
+    class Meta:
+        billing_mode = "PAY_PER_REQUEST"
+        # All attributes are projected
+        projection = AllProjection()
+        index_name = "apply_to-type-index"
+
+    apply_to = UnicodeAttribute(hash_key=True)
+    type = NumberAttribute(range_key=True)
+
+class IndexRelationshipByApplyToType(GlobalSecondaryIndex):
+    """
+    This class represents a local secondary index
+    """
+
+    class Meta:
+        billing_mode = "PAY_PER_REQUEST"
+        # All attributes are projected
+        projection = AllProjection()
+        index_name = "apply_to-type-index"
+
+    apply_to = UnicodeAttribute(hash_key=True)
+    type = NumberAttribute(range_key=True)
+
+class IndexResourceByApplyToResourceId(GlobalSecondaryIndex):
+    """
+    This class represents a local secondary index
+    """
+
+    class Meta:
+        billing_mode = "PAY_PER_REQUEST"
+        # All attributes are projected
+        projection = AllProjection()
+        index_name = "apply_to-resource_id-index"
+
+    apply_to = UnicodeAttribute(hash_key=True)
+    resource_id = UnicodeAttribute(range_key=True)
+
 class BaseModel(Model):
     class Meta:
         billing_mode = "PAY_PER_REQUEST"

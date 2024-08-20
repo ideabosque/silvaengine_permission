@@ -6,8 +6,17 @@ from silvaengine_utility import Utility
 from silvaengine_permission.permission.models import RelationshipModel, RoleModel, ResourceModel
 from silvaengine_permission.permission.enumerations import RoleRelationshipType, RoleType
 from pynamodb.exceptions import DoesNotExist
+from boto3.dynamodb.conditions import Key
 from copy import deepcopy
-import uuid, pendulum
+import uuid
+
+def runtime_debug(mark, t=0):
+    if t > 0:
+        d = int(datetime.now().timestamp() * 1000) - t
+
+        if d > 0:
+            print("********** It took {} ms to handle {}.".format(d, mark))
+    return int(datetime.now().timestamp() * 1000)
 
 # Create role
 def create_role_handler(channel, kwargs):
@@ -18,7 +27,6 @@ def create_role_handler(channel, kwargs):
             channel=channel,
             permissions=kwargs.get("permissions", []),
         )
-        
         RoleModel(
             role_id,
             **{
@@ -346,6 +354,7 @@ def get_roles(user_id, channel, is_admin, group_id):
                     for relationship in RelationshipModel.apply_to_type_index.query(
                         hash_key=str(channel).strip(),
                         filter_condition=filter_conditions,
+                        attributes_to_get=["role_id"],
                     )
                 ]
             )
@@ -354,15 +363,7 @@ def get_roles(user_id, channel, is_admin, group_id):
         if len(role_ids) < 1:
             raise Exception("The current user is not assigned any role", 403)
 
-        return Utility.json_dumps(
-            [
-                role
-                for role in RoleModel.apply_to_type_index.query(
-                    hash_key=str(channel).strip(),
-                    filter_condition=RoleModel.role_id.is_in(*list(set(role_ids)))
-                )
-            ]
-        )
+        return Utility.json_dumps([role for role in RoleModel.batch_get(list(set(role_ids)))])
     except Exception as e:
         raise e
 
@@ -402,7 +403,7 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
                 hash_key=str(channel).strip(),
                 range_key_condition=range_key_condition,
                 filter_condition=filter_conditions,
-                attributes_to_get=["role_id","user_id"]
+                attributes_to_get=["role_id","user_id"],
             )
         ]
 
