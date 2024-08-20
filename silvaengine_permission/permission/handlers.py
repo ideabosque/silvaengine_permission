@@ -356,6 +356,7 @@ def get_roles(user_id, channel, is_admin, group_id):
                     for relationship in RelationshipModel.apply_to_type_index.query(
                         hash_key=str(channel).strip(),
                         filter_condition=filter_conditions,
+                        attributes_to_get=["role_id"],
                     )
                 ]
             )
@@ -364,19 +365,7 @@ def get_roles(user_id, channel, is_admin, group_id):
         if len(role_ids) < 1:
             raise Exception("The current user is not assigned any role", 403)
 
-        ts = runtime_debug("silvaengine permission: get roles")
-        r = Utility.json_dumps(
-            [
-                role
-                for role in RoleModel.apply_to_type_index.query(
-                    hash_key=channel,
-                    filter_condition=RoleModel.role_id.is_in(*list(set(role_ids)))
-                )
-            ]
-        )
-        ts = runtime_debug("silvaengine permission: get roles",t=ts)
-
-        return r
+        return Utility.json_dumps([role for role in RoleModel.batch_get(list(set(role_ids)))])
     except Exception as e:
         raise e
 
@@ -420,6 +409,7 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
                 hash_key=str(channel).strip(),
                 range_key_condition=range_key_condition,
                 filter_condition=filter_conditions,
+                attributes_to_get=["role_id"],
             )
         ]
 

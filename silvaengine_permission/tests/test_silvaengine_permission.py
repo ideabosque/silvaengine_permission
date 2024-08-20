@@ -44,51 +44,51 @@ class SilvaEngineAuthTest(unittest.TestCase):
     def test_get_roles_graphql(self):
         query = """
             query roles(
-                    $pageSize: Int
-                    $pageNumber: Int
-                    $isAdmin: Boolean
-                    $status: Boolean
-                    $description: String
-                    $type: Int
-                    $name: String
-                ){
-                roles(
-                    pageSize: $pageSize
-                    pageNumber: $pageNumber
-                    isAdmin: $isAdmin
-                    status: $status
-                    roleDescription: $description
-                    roleType: $type
-                    name: $name
-                ){
-                    items {
-                        roleId
-                        name
-                        permissions{
-                            resourceId
-                            permissions {
-                                operation
-                                operationName
-                                exclude
-                            }
+                $pageSize: Int
+                $pageNumber: Int
+                $isAdmin: Boolean
+                $status: Boolean
+                $description: String
+                $type: Int
+                $name: String
+            ){
+            roles(
+                pageSize: $pageSize
+                pageNumber: $pageNumber
+                isAdmin: $isAdmin
+                status: $status
+                roleDescription: $description
+                roleType: $type
+                name: $name
+            ){
+                items {
+                    roleId
+                    name
+                    permissions{
+                        resourceId
+                        permissions {
+                            operation
+                            operationName
+                            exclude
                         }
-                        description
-                        isAdmin
-                        status
-                        type
-                        createdAt
-                        updatedAt
-                        updatedBy
                     }
-                    pageSize
-                    pageNumber
-                    total
+                    description
+                    isAdmin
+                    status
+                    type
+                    createdAt
+                    updatedAt
+                    updatedBy
                 }
+                pageSize
+                pageNumber
+                total
             }
+        }
         """
         variables = {
             "pageSize": 10,
-            "pageNumber": 2,
+            "pageNumber": 1,
             # "isAdmin": True,
             # "status": True,
             # "description": None,
@@ -145,7 +145,7 @@ class SilvaEngineAuthTest(unittest.TestCase):
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
-    # @unittest.skip("demonstrating skipping")
+    @unittest.skip("demonstrating skipping")
     def test_get_users_graphql(self):
         query = """
             query users(
@@ -506,35 +506,6 @@ class SilvaEngineAuthTest(unittest.TestCase):
         response = self.instance.role_graphql(**payload)
         logger.info(response)
 
-    # @unittest.skip("demonstrating skipping")
-    # def test_certificate(self):
-    #     query = """
-    #         query certificate(
-    #                 $username: String!,
-    #                 $password: String!
-    #             ) {
-    #             certificate(
-    #                 username: $username,
-    #                 password: $password
-    #             ) {
-    #                idToken
-    #                refreshToken
-    #                permissions
-    #                context
-    #                expiresIn
-    #             }
-    #         }
-    #     """
-
-    #     variables = {
-    #         "username": os.getenv("test_username"),
-    #         "password": os.getenv("test_user_password"),
-    #     }
-    #     payload = {"query": query, "variables": variables}
-    #     response = self.instance.login_graphql(**payload)
-    #     print(response)
-    #     print("##############")
-
     @unittest.skip("demonstrating skipping")
     def test_authorize(self):
         request = {
@@ -842,24 +813,39 @@ class SilvaEngineAuthTest(unittest.TestCase):
     @unittest.skip("demonstrating skipping")
     def test_get_roles_by_specific_user(self):
         response = self.instance.get_roles_by_specific_user(
-            1906, RoleRelationshipType.SELLER.value
+            channel="ss3",
+            user_id=1906,
+            relationship_type=RoleRelationshipType.SELLER.value,
+            group_id=None,
+            ignore_permissions=True,
         )
         print("test_get_roles_by_specific_user:::::", response)
 
     @unittest.skip("demonstrating skipping")
     def test_check_user_permissions(self):
         response = self.instance.check_user_permissions(
-            "crm_engine",
-            "CRMEngine",
-            "crm_graphql",
-            "mutation",
-            "insertCustomer",
-            2,
-            2086,
-            204,
+            channel="ss3",
+            settings=setting,
+            module_name="crm_engine",
+            class_name="CRMEngine",
+            function_name="crm_graphql",
+            operation_type= "mutation",
+            operation= "insertCustomer",
+            relationship_type=2,
+            user_id=2086,
+            group_id=204,
         )
         print("test_check_user_permissions:::::", response)
 
+    # @unittest.skip("demonstrating skipping")
+    def test_permission_check_callback(self):
+        response = self.instance.permission_check_callback(
+            user_id=118,
+            channel="ss3",
+            is_admin=1,
+            group_id="",
+        )
+        print("test_permission_check_callback:::::", response)
 
 if __name__ == "__main__":
     unittest.main()
