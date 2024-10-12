@@ -18,6 +18,7 @@ from silvaengine_permission.permission.handlers import (
     delete_relationships_by_condition,
     check_user_permissions,
     get_group_ids_by_user_and_role_ids,
+    get_relationships,
 )
 from silvaengine_permission.permission.enumerations import RoleRelationshipType
 

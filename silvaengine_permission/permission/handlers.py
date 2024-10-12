@@ -1201,6 +1201,53 @@ def get_group_ids_by_user_and_role_ids(channel, user_ids, relationship_type, rol
     return r
 
 
+def get_relationships(info, **kwargs):
+    try:
+        arguments = {
+            "hash_key": str(info.context.get("apply_to")).strip(),
+            "filter_condition": None,
+        }
+
+        attributes = vars(RelationshipModel)
+        filter_conditions = []
+
+        for attr_name in attributes:
+            if attr_name not in ["apply_to","type"] and kwargs.get(attr_name) is not None:
+                if type(kwargs.get(attr_name)) is list:
+                    filter_conditions.append(getattr(RelationshipModel, attr_name).is_in(*list(set(kwargs.get(attr_name,[])))))
+                else:
+                    filter_conditions.append(getattr(RelationshipModel, attr_name)==kwargs.get(attr_name))
+
+        if len(filter_conditions):
+            arguments["filter_condition"] = filter_conditions.pop(0)
+
+            for condition in filter_conditions:
+                arguments["filter_condition"] = (
+                    arguments.get("filter_condition") & condition
+                )
+
+        # Query role form database.
+        return [
+            dict(
+                **{
+                    "role_id": relationship.role_id,
+                    "type": relationship.type,
+                    "relationship_id": relationship.relationship_id,
+                    "apply_to": relationship.apply_to,
+                    "user_id": relationship.user_id,
+                    "group_id": relationship.group_id,
+                    "status": relationship.status,
+                    "is_default": relationship.is_default,
+                    "updated_by": relationship.updated_by,
+                    "created_at": relationship.created_at,
+                    "updated_at": relationship.updated_at,
+                }
+            )
+            for relationship in RelationshipModel.apply_to_type_index.query(**arguments)
+        ]
+    except Exception as e:
+        raise e
+
 def add_resource():
     with open("f:\install.log", "a") as fd:
         fd.write("Test\n")
