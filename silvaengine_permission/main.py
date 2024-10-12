@@ -17,7 +17,8 @@ from silvaengine_permission.permission.handlers import (
     get_roles_by_type,
     delete_relationships_by_condition,
     check_user_permissions,
-    get_group_ids_by_user_and_role_ids
+    get_group_ids_by_user_and_role_ids,
+    get_relationships
 )
 from silvaengine_permission.permission.enumerations import RoleRelationshipType
 
@@ -488,3 +489,6 @@ class Permission(object):
             )
         except Exception as e:
             raise e
+        
+    def get_relationships(self, info, **kwargs):
+        return get_relationships(info, **kwargs)

@@ -11,6 +11,7 @@ from .types import (
     SimilarUserType,
     SimilarUsersType,
     RoleDetectionType,
+    RelationshipType,
 )
 from .models import RelationshipModel, RoleModel
 from .enumerations import RoleType
@@ -66,8 +67,8 @@ def resolve_roles(info, **kwargs):
                 str(relationship.role_id).strip()
                 for relationship in RelationshipModel.scan(
                     (
-                        RelationshipModel.role_id.is_in(
-                            *list(set(kwargs.get("user_ids")))
+                        RelationshipModel.user_id.is_in(
+                            *list(set(kwargs.get("user_ids",[])))
                         )
                     )
                     & (RelationshipModel.apply_to == info.context.get("apply_to"))
