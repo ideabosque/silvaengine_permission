@@ -460,3 +460,6 @@ class Permission(object):
             )
         except Exception as e:
             raise e
+
+    def get_relationships(self, info, **kwargs):
+        return get_relationships(info, **kwargs)
