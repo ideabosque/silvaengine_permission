@@ -65,7 +65,7 @@ def resolve_roles(info, **kwargs):
                 str(relationship.role_id).strip()
                 for relationship in RelationshipModel.scan(
                     (
-                        RelationshipModel.role_id.is_in(
+                        RelationshipModel.user_id.is_in(
                             *list(set(kwargs.get("user_ids")))
                         )
                     )
