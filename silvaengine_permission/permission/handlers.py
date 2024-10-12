@@ -1237,10 +1237,6 @@ def get_relationships(info, **kwargs):
                     "user_id": relationship.user_id,
                     "group_id": relationship.group_id,
                     "status": relationship.status,
-                    "is_default": relationship.is_default,
-                    "updated_by": relationship.updated_by,
-                    "created_at": relationship.created_at,
-                    "updated_at": relationship.updated_at,
                 }
             )
             for relationship in RelationshipModel.apply_to_type_index.query(**arguments)
