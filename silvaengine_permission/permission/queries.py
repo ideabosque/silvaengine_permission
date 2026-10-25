@@ -1,21 +1,27 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from importlib.util import find_spec
+
+from copy import deepcopy
 from importlib import import_module
-from silvaengine_utility import Utility
+from importlib.util import find_spec
+
+from silvaengine_utility import Serializer, Utility
+
+from .enumerations import RoleType
+from .models import RelationshipModel, RoleModel
+from .types import (
+    RelationshipType,
+    RoleDetectionType,
+    RolesType,
+    SimilarUsersType,
+    SimilarUserType,
+    UserRelationshipType,
+)
 from .types import (
     RoleType as OutputRoleType,
-    RolesType,
-    UserRelationshipType,
-    SimilarUserType,
-    SimilarUsersType,
-    RoleDetectionType,
-    RelationshipType,
 )
-from .models import RelationshipModel, RoleModel
-from .enumerations import RoleType
-from copy import deepcopy
+
 
 # @TODO: Apply status check
 def resolve_roles(info, **kwargs):
@@ -68,7 +74,7 @@ def resolve_roles(info, **kwargs):
                 for relationship in RelationshipModel.scan(
                     (
                         RelationshipModel.user_id.is_in(
-                            *list(set(kwargs.get("user_ids",[])))
+                            *list(set(kwargs.get("user_ids", [])))
                         )
                     )
                     & (RelationshipModel.apply_to == info.context.get("apply_to"))
@@ -98,7 +104,7 @@ def resolve_roles(info, **kwargs):
             page_number = 1
 
         if arguments.get("limit", 0) > 0 and page_number > 1:
-            pagination_offset = (page_number - 1) * int(arguments.get("limit",0))
+            pagination_offset = (page_number - 1) * int(arguments.get("limit", 0))
 
         pagination_arguments = {
             "limit": pagination_offset if pagination_offset > 0 else None,
@@ -126,8 +132,8 @@ def resolve_roles(info, **kwargs):
         results = RoleModel.scan(**arguments)
         roles = [
             OutputRoleType(
-                # **Utility.json_loads(
-                #     Utility.json_dumps(dict(**role.__dict__["attribute_values"]))
+                # **Serializer.json_loads(
+                #     Serializer.json_dumps(dict(**role.__dict__["attribute_values"]))
                 # )
                 **{
                     "role_id": role.role_id,
@@ -227,10 +233,10 @@ def resolve_users(info, **kwargs):
                 )
 
         # Pagination.
-        if arguments.get("limit",0) > 0 and kwargs.get("page_number", 0) > 1:
+        if arguments.get("limit", 0) > 0 and kwargs.get("page_number", 0) > 1:
             pagination_arguments = {
                 "limit": (int(kwargs.get("page_number", 0)) - 1)
-                * arguments.get("limit",0),
+                * arguments.get("limit", 0),
                 "last_evaluated_key": None,
                 "filter_condition": arguments["filter_condition"],
                 "attributes_to_get": ["role_id"],
@@ -255,8 +261,8 @@ def resolve_users(info, **kwargs):
             if role:
                 roles[role.role_id] = SimilarUserType(
                     users=[],
-                    # **Utility.json_loads(
-                    #     Utility.json_dumps(dict(**role.__dict__["attribute_values"]))
+                    # **Serializer.json_loads(
+                    #     Serializer.json_dumps(dict(**role.__dict__["attribute_values"]))
                     # )
                     **{
                         "role_id": role.role_id,
@@ -270,7 +276,7 @@ def resolve_users(info, **kwargs):
                         "updated_by": role.updated_by,
                         "created_at": role.created_at,
                         "updated_at": role.updated_at,
-                    }
+                    },
                 )
                 total += 1
 
@@ -341,8 +347,8 @@ def resolve_users(info, **kwargs):
                     "status": relationship.status,
                     "is_default": relationship.is_default,
                 }
-                # **Utility.json_loads(
-                #     Utility.json_dumps(
+                # **Serializer.json_loads(
+                #     Serializer.json_dumps(
                 #         dict(**relationship.__dict__["attribute_values"])
                 #     )
                 # )
@@ -383,7 +389,9 @@ def resolve_users(info, **kwargs):
                             [
                                 # user.cognito_user_sub
                                 str(user["id"])
-                                for user in roles[str(relationship.role_id).strip()].users
+                                for user in roles[
+                                    str(relationship.role_id).strip()
+                                ].users
                                 # if hasattr(user, "cognito_user_sub")
                                 if ("id" in user)
                             ]
@@ -397,11 +405,17 @@ def resolve_users(info, **kwargs):
                         and users.get(str(relationship.user_id).strip())
                         and str(relationship.user_id).strip() not in user_ids
                     ):
-                        users.get(str(relationship.user_id).strip()).update({
-                            "is_default_manager": relationship.is_default if relationship.is_default else False,
-                        })
+                        users.get(str(relationship.user_id).strip()).update(
+                            {
+                                "is_default_manager": relationship.is_default
+                                if relationship.is_default
+                                else False,
+                            }
+                        )
                         # user = users.get(str(relationship.user_id).strip())
-                        roles[str(relationship.role_id).strip()].users.append(deepcopy(users.get(str(relationship.user_id).strip())))
+                        roles[str(relationship.role_id).strip()].users.append(
+                            deepcopy(users.get(str(relationship.user_id).strip()))
+                        )
 
         return SimilarUsersType(
             items=roles.values(),
@@ -418,7 +432,9 @@ def resolve_role(info, **kwargs):
     role = RoleModel.get(kwargs.get("role_id"))
 
     return OutputRoleType(
-        **Utility.json_loads(Utility.json_dumps(role.__dict__["attribute_values"]))
+        **Serializer.json_loads(
+            Serializer.json_dumps(role.__dict__["attribute_values"])
+        )
     )
 
 

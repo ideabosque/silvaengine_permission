@@ -1,17 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from silvaengine_utility import JSON
-from graphene import (
-    ObjectType,
-    InputObjectType,
-    String,
-    DateTime,
-    List,
-    Int,
-    Boolean,
-)
 
+from graphene import (
+    Boolean,
+    DateTime,
+    InputObjectType,
+    Int,
+    List,
+    ObjectType,
+    String,
+)
+from silvaengine_utility import JSONCamelCase
 
 __author__ = "bl"
 
@@ -62,7 +62,7 @@ class RolesType(ObjectType):
     page_size = Int()
     page_number = Int()
     total = Int()
-    # last_evaluated_key = JSON()
+    # last_evaluated_key = JSONCamelCase()
 
 
 class RelationshipType(ObjectType):
@@ -77,7 +77,7 @@ class RelationshipType(ObjectType):
     updated_at = DateTime()
     updated_by = String()
     status = Boolean()
-    is_default =Boolean()
+    is_default = Boolean()
 
 
 class UserRelationshipType(ObjectType):
@@ -87,17 +87,17 @@ class UserRelationshipType(ObjectType):
     # type: 0 - amdin, 1 - Seller, 2 - team
     type = Int()
     apply_to = String()
-    user = JSON()
+    user = JSONCamelCase()
     role_id = String()
     created_at = DateTime()
     updated_at = DateTime()
     updated_by = String()
     status = Boolean()
-    is_default =Boolean()
+    is_default = Boolean()
 
 
 class SimilarUserType(RoleType):
-    users = List(JSON)
+    users = List(JSONCamelCase)
 
 
 class SimilarUsersType(ObjectType):
@@ -112,7 +112,7 @@ class RelationshipsType(ObjectType):
     page_size = Int()
     page_number = Int()
     total = Int()
-    # last_evaluated_key = JSON()
+    # last_evaluated_key = JSONCamelCase()
 
 
 class UserRelationshipsType(ObjectType):
@@ -120,7 +120,7 @@ class UserRelationshipsType(ObjectType):
     page_size = Int()
     page_number = Int()
     total = Int()
-    # last_evaluated_key = JSON()
+    # last_evaluated_key = JSONCamelCase()
 
 
 class CertificateType(ObjectType):
@@ -129,8 +129,8 @@ class CertificateType(ObjectType):
     refresh_token = String()
     expires_in = Int()
     token_type = String()
-    permissions = JSON()
-    context = JSON()
+    permissions = JSONCamelCase()
+    context = JSONCamelCase()
 
 
 class RelationshipInputType(InputObjectType):
@@ -145,4 +145,4 @@ class RelationshipInputType(InputObjectType):
 
 
 class RoleDetectionType(ObjectType):
-    roles = JSON()
+    roles = JSONCamelCase()

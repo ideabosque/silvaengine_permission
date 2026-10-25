@@ -1,25 +1,29 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from graphene import Field, Mutation, String, Boolean, Int, List
-from silvaengine_utility import Utility
+
+import traceback
+
+from graphene import Boolean, Field, Int, List, Mutation, String
+from silvaengine_utility import Serializer, Utility
+
+from .handlers import (
+    create_relationship_handler,
+    create_role_handler,
+    delete_relationship_handler,
+    delete_role_handler,
+    save_relationships_handler,
+    update_relationship_handler,
+    update_role_handler,
+)
 from .types import (
-    RoleType,
-    RelationshipType,
     PermissionInputType,
     RelationshipInputType,
-)
-from .handlers import (
-    create_role_handler,
-    update_role_handler,
-    delete_role_handler,
-    create_relationship_handler,
-    update_relationship_handler,
-    delete_relationship_handler,
-    save_relationships_handler,
+    RelationshipType,
+    RoleType,
 )
 from .utils import notification
-import traceback
+
 
 # Append role info.
 class CreateRole(Mutation):
@@ -38,8 +42,8 @@ class CreateRole(Mutation):
     def mutate(root, info, **kwargs):
         try:
             role = RoleType(
-                **Utility.json_loads(
-                    Utility.json_dumps(
+                **Serializer.json_loads(
+                    Serializer.json_dumps(
                         create_role_handler(
                             channel=info.context.get("apply_to"), kwargs=kwargs
                         ).__dict__["attribute_values"]
@@ -73,8 +77,8 @@ class UpdateRole(Mutation):
     def mutate(root, info, **kwargs):
         try:
             role = RoleType(
-                **Utility.json_loads(
-                    Utility.json_dumps(
+                **Serializer.json_loads(
+                    Serializer.json_dumps(
                         update_role_handler(
                             channel=info.context.get("apply_to"),
                             kwargs=kwargs,
@@ -130,8 +134,8 @@ class CreateRelationship(Mutation):
     def mutate(root, info, **kwargs):
         try:
             relationship = RelationshipType(
-                **Utility.json_loads(
-                    Utility.json_dumps(
+                **Serializer.json_loads(
+                    Serializer.json_dumps(
                         create_relationship_handler(
                             channel=info.context.get("apply_to"),
                             operator_id=info.context.get("authorizer", {}).get(
@@ -168,8 +172,8 @@ class UpdateRelationship(Mutation):
     def mutate(root, info, **kwargs):
         try:
             relationship = RelationshipType(
-                **Utility.json_loads(
-                    Utility.json_dumps(
+                **Serializer.json_loads(
+                    Serializer.json_dumps(
                         update_relationship_handler(
                             channel=info.context.get("apply_to"), kwargs=kwargs
                         ).__dict__["attribute_values"]

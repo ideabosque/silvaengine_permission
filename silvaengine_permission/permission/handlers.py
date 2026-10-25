@@ -1,15 +1,22 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from datetime import datetime
-from silvaengine_utility import Utility
-from silvaengine_resource import ResourceModel
-from silvaengine_permission.permission.models import RelationshipModel, RoleModel
-from silvaengine_permission.permission.enumerations import RoleRelationshipType, RoleType
-from pynamodb.exceptions import DoesNotExist
-from boto3.dynamodb.conditions import Key
-from copy import deepcopy
+
 import uuid
+from copy import deepcopy
+from datetime import datetime
+
+from boto3.dynamodb.conditions import Key
+from pynamodb.exceptions import DoesNotExist
+from silvaengine_resource import ResourceModel
+from silvaengine_utility import Serializer, Utility
+
+from silvaengine_permission.permission.enumerations import (
+    RoleRelationshipType,
+    RoleType,
+)
+from silvaengine_permission.permission.models import RelationshipModel, RoleModel
+
 
 def runtime_debug(mark, t=0):
     if t > 0:
@@ -18,6 +25,7 @@ def runtime_debug(mark, t=0):
         if d > 0:
             print("********** It took {} ms to handle {}.".format(d, mark))
     return int(datetime.now().timestamp() * 1000)
+
 
 # Create role
 def create_role_handler(channel, kwargs):
@@ -48,6 +56,7 @@ def create_role_handler(channel, kwargs):
         return RoleModel.get(role_id, None)
     except Exception as e:
         raise e
+
 
 # Update role for specified ID.
 def update_role_handler(channel, kwargs):
@@ -91,6 +100,7 @@ def update_role_handler(channel, kwargs):
     except Exception as e:
         raise e
 
+
 # Delete role by specified ID.
 def delete_role_handler(channel, role_id):
     try:
@@ -105,6 +115,7 @@ def delete_role_handler(channel, role_id):
         return RoleModel(role_id).delete(condition=condition)
     except Exception as e:
         raise e
+
 
 # Create relationship of role / group / user.
 def create_relationship_handler(channel, operator_id, kwargs):
@@ -126,10 +137,8 @@ def create_relationship_handler(channel, operator_id, kwargs):
                     for item in RelationshipModel.apply_to_type_index.query(
                         hash_key=str(channel).strip(),
                         range_key_condition=(
-                            (
-                                RelationshipModel.type
-                                == int(kwargs.get("relationship_type", 0))
-                            )
+                            RelationshipModel.type
+                            == int(kwargs.get("relationship_type", 0))
                         ),
                         filter_condition=filter_conditions,
                     )
@@ -160,7 +169,7 @@ def create_relationship_handler(channel, operator_id, kwargs):
 
             for argument, rule in rules.items():
                 if kwargs.get(argument) is not None and hasattr(
-                    RelationshipModel, rule.get("field","")
+                    RelationshipModel, rule.get("field", "")
                 ):
                     value = kwargs.get(argument)
 
@@ -172,7 +181,7 @@ def create_relationship_handler(channel, operator_id, kwargs):
                         value = bool(value)
 
                     actions.append(
-                        getattr(RelationshipModel, rule.get("field","")).set(value)
+                        getattr(RelationshipModel, rule.get("field", "")).set(value)
                     )
 
             for id in relationship_ids:
@@ -209,6 +218,7 @@ def create_relationship_handler(channel, operator_id, kwargs):
         return RelationshipModel.get(relationship_id)
     except Exception as e:
         raise e
+
 
 # Update relationship for specified ID.
 def update_relationship_handler(channel, kwargs):
@@ -251,6 +261,7 @@ def update_relationship_handler(channel, kwargs):
     except Exception as e:
         raise e
 
+
 # Delete relationship by specified ID.
 def delete_relationship_handler(channel, relationship_id):
     try:
@@ -261,6 +272,7 @@ def delete_relationship_handler(channel, relationship_id):
         return RelationshipModel(relationship_id).delete()
     except Exception as e:
         raise e
+
 
 # Bulk save relationships
 def save_relationships_handler(channel, operator_id, relationships):
@@ -308,7 +320,7 @@ def save_relationships_handler(channel, operator_id, relationships):
                     relationship_id=str(item.relationship_id).strip(),
                 )
 
-        for relationship in relationships:       
+        for relationship in relationships:
             RelationshipModel(
                 str(uuid.uuid1()),
                 **{
@@ -330,9 +342,9 @@ def save_relationships_handler(channel, operator_id, relationships):
                 },
             ).save()
 
-
     except Exception as e:
         raise e
+
 
 def get_roles(user_id, channel, is_admin, group_id):
     try:
@@ -365,12 +377,17 @@ def get_roles(user_id, channel, is_admin, group_id):
         if len(role_ids) < 1:
             raise Exception("The current user is not assigned any role", 403)
 
-        return Utility.json_dumps([role for role in RoleModel.batch_get(list(set(role_ids)))])
+        return Serializer.json_dumps(
+            [role for role in RoleModel.batch_get(list(set(role_ids)))]
+        )
     except Exception as e:
         raise e
 
+
 # Get a list of resource permissions for a specified user
-def get_user_permissions(authorizer, channel, group_id=None, relationship_type=None, role_ids = None):
+def get_user_permissions(
+    authorizer, channel, group_id=None, relationship_type=None, role_ids=None
+):
     try:
         if not authorizer or not channel:
             raise Exception("Missing required parameter(s)")
@@ -397,7 +414,7 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
         range_key_condition = None
 
         if relationship_type is not None:
-            range_key_condition = (RelationshipModel.type == int(relationship_type))
+            range_key_condition = RelationshipModel.type == int(relationship_type)
 
         # print("filter conditions: ", filter_conditions)
         # print("range key conditions: ",range_key_condition)
@@ -466,6 +483,7 @@ def get_user_permissions(authorizer, channel, group_id=None, relationship_type=N
     except Exception as e:
         raise e
 
+
 def check_permission(roles, resource) -> bool:
     if (
         not resource.get("operation")
@@ -522,7 +540,7 @@ def check_permission(roles, resource) -> bool:
             m[operation_name] = list(set(m[operation_name] + rule.exclude))
 
     if type(m.get(request_operation_name)) is list:
-        for field in m.get(request_operation_name,[]):
+        for field in m.get(request_operation_name, []):
             path, field = field.strip().lower().split(":", 2)
 
             if (
@@ -538,6 +556,7 @@ def check_permission(roles, resource) -> bool:
         return True
 
     return False
+
 
 # Obtain user roles according to the specified user ID
 def get_roles_by_user_id(
@@ -613,8 +632,8 @@ def get_roles_by_user_id(
                 (RoleModel.role_id.is_in(*ids))
                 & (RoleModel.apply_to == str(channel).strip())
             ):
-                # role = Utility.json_loads(
-                #     Utility.json_dumps(role.__dict__["attribute_values"])
+                # role = Serializer.json_loads(
+                #     Serializer.json_dumps(role.__dict__["attribute_values"])
                 # )
 
                 # if role.get("permissions") and ignore_permissions:
@@ -663,7 +682,7 @@ def get_roles_by_user_id(
                     "group_id": gid,
                 }
             elif roles.get(rid):
-                role = roles.get(rid,{})
+                role = roles.get(rid, {})
                 role["group_id"] = gid
                 role["relationship_type"] = relationship.type
 
@@ -682,9 +701,10 @@ def get_roles_by_user_id(
         #         }
 
     if type(user_id) is not list and user_roles.get(str(user_id).strip()):
-        return user_roles.get(str(user_id).strip(),{}).values()
+        return user_roles.get(str(user_id).strip(), {}).values()
 
     return user_roles
+
 
 # Obtain user roles according to the specified user ID
 # relationship_type: 0 - team, 1 - seller
@@ -809,7 +829,9 @@ def get_users_by_role_type(
             #     jsonpickle.encode(relationship, unpicklable=False)
             # ).get("attribute_values", relationship)
 
-            is_default_manager = relationship.is_default if relationship.is_default else False
+            is_default_manager = (
+                relationship.is_default if relationship.is_default else False
+            )
             relationship = {
                 "relationship_id": relationship.relationship_id,
                 "apply_to": relationship.apply_to,
@@ -822,9 +844,11 @@ def get_users_by_role_type(
             }
 
             if relationship and user_id and users.get(user_id):
-                users.get(user_id,{}).update({
-                    "is_default_manager": is_default_manager,
-                })
+                users.get(user_id, {}).update(
+                    {
+                        "is_default_manager": is_default_manager,
+                    }
+                )
                 relationship.update({"user_base_info": deepcopy(users.get(user_id))})
 
             role_users[role_id][group_id].append(relationship)
@@ -868,6 +892,7 @@ def get_users_by_role_type(
 
     return results
 
+
 def get_roles_by_type(types, channel, status=None, is_admin=None) -> dict:
     try:
         roles = {}
@@ -893,6 +918,7 @@ def get_roles_by_type(types, channel, status=None, is_admin=None) -> dict:
         return roles
     except Exception as e:
         raise e
+
 
 # Delete user roles by conditions.
 def delete_relationships_by_condition(
@@ -955,6 +981,7 @@ def delete_relationships_by_condition(
         return True
     except Exception as e:
         raise e
+
 
 # Check user permissions.
 def check_user_permissions(
@@ -1087,10 +1114,11 @@ def check_user_permissions(
     except Exception as e:
         raise e
 
+
 def _get_unvisible_permissions(channel, permissions):
     resources = {}
-    results = Utility.json_loads(
-        Utility.json_dumps(
+    results = Serializer.json_loads(
+        Serializer.json_dumps(
             [
                 resource
                 for resource in ResourceModel.scan(
@@ -1133,7 +1161,10 @@ def _get_unvisible_permissions(channel, permissions):
 
     return permissions
 
-def get_group_ids_by_user_and_role_ids(channel, user_ids, relationship_type, role_types=None):
+
+def get_group_ids_by_user_and_role_ids(
+    channel, user_ids, relationship_type, role_types=None
+):
     filter_conditions = RelationshipModel.user_id.is_in(*list(set(user_ids)))
     r = {}
 
@@ -1141,7 +1172,7 @@ def get_group_ids_by_user_and_role_ids(channel, user_ids, relationship_type, rol
         try:
             m = {}
 
-            for key, roles in  get_roles_by_type(role_types, channel=channel).items():
+            for key, roles in get_roles_by_type(role_types, channel=channel).items():
                 for role in roles:
                     m[role.role_id] = key
 
@@ -1184,11 +1215,20 @@ def get_relationships(info, **kwargs):
         filter_conditions = []
 
         for attr_name in attributes:
-            if attr_name not in ["apply_to","type"] and kwargs.get(attr_name) is not None:
+            if (
+                attr_name not in ["apply_to", "type"]
+                and kwargs.get(attr_name) is not None
+            ):
                 if type(kwargs.get(attr_name)) is list:
-                    filter_conditions.append(getattr(RelationshipModel, attr_name).is_in(*list(set(kwargs.get(attr_name,[])))))
+                    filter_conditions.append(
+                        getattr(RelationshipModel, attr_name).is_in(
+                            *list(set(kwargs.get(attr_name, [])))
+                        )
+                    )
                 else:
-                    filter_conditions.append(getattr(RelationshipModel, attr_name)==kwargs.get(attr_name))
+                    filter_conditions.append(
+                        getattr(RelationshipModel, attr_name) == kwargs.get(attr_name)
+                    )
 
         if len(filter_conditions):
             arguments["filter_condition"] = filter_conditions.pop(0)

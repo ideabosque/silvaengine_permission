@@ -1,27 +1,28 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+
 from graphene import Schema
-from silvaengine_utility  import Utility
+from silvaengine_utility import Serializer, Utility
+
+from silvaengine_permission.permission.enumerations import RoleRelationshipType
+from silvaengine_permission.permission.handlers import (
+    check_user_permissions,
+    create_relationship_handler,
+    delete_relationships_by_condition,
+    get_group_ids_by_user_and_role_ids,
+    get_relationships,
+    get_roles,
+    get_roles_by_type,
+    get_roles_by_user_id,
+    get_user_permissions,
+    get_users_by_role_type,
+)
 from silvaengine_permission.permission.schema import (
-    RoleQuery,
     RoleMutations,
+    RoleQuery,
     role_type_class,
 )
-from silvaengine_permission.permission.handlers import (
-    get_roles,
-    get_user_permissions,
-    get_roles_by_user_id,
-    get_users_by_role_type,
-    create_relationship_handler,
-    get_roles_by_type,
-    delete_relationships_by_condition,
-    check_user_permissions,
-    get_group_ids_by_user_and_role_ids,
-    get_relationships
-)
-from silvaengine_permission.permission.enumerations import RoleRelationshipType
-
 
 __author__ = "bl"
 
@@ -154,7 +155,7 @@ class Permission(object):
             }
 
             if not operations:
-                return Utility.json_dumps(response)
+                return Serializer.json_dumps(response)
 
             execution_result = schema.execute(
                 operations, context_value=context, variable_values=variables
@@ -179,7 +180,7 @@ class Permission(object):
                     "errors": "Uncaught execution error.",
                 }
 
-            return Utility.json_dumps(response)
+            return Serializer.json_dumps(response)
         except Exception as e:
             raise e
 
@@ -193,11 +194,13 @@ class Permission(object):
         )
 
     # Get user permissions
-    def get_user_permissions(self, authorizer, channel, group_id=None, role_type=None, role_ids=None):
+    def get_user_permissions(
+        self, authorizer, channel, group_id=None, role_type=None, role_ids=None
+    ):
         return get_user_permissions(
-            authorizer=authorizer, 
-            channel=channel, 
-            group_id=group_id, 
+            authorizer=authorizer,
+            channel=channel,
+            group_id=group_id,
             relationship_type=role_type,
             role_ids=role_ids,
         )
@@ -261,7 +264,7 @@ class Permission(object):
 
             # 2. save relationship.
             if type(roles.get(role_type)) is list and type(user_ids) is list:
-                for role in roles.get(role_type,[]):
+                for role in roles.get(role_type, []):
                     kwargs = {
                         "channel": str(channel).strip(),
                         "role_ids": [role.role_id],
@@ -455,9 +458,9 @@ class Permission(object):
     # Get roles by type
     def get_roles_by_types(
         self,
-        types, 
-        channel, 
-        status=None, 
+        types,
+        channel,
+        status=None,
         is_admin=None,
     ):
         try:
@@ -476,19 +479,21 @@ class Permission(object):
             raise e
 
     # Get group IDs by user IDs and role IDs
-    def get_group_ids_by_user_and_role_ids(self, channel, user_ids, relationship_type, role_types=None):
+    def get_group_ids_by_user_and_role_ids(
+        self, channel, user_ids, relationship_type, role_types=None
+    ):
         try:
             if not user_ids or relationship_type is None:
-                raise Exception('User ids and relationship type are required')
+                raise Exception("User ids and relationship type are required")
 
             return get_group_ids_by_user_and_role_ids(
-                channel=channel, 
-                user_ids=user_ids, 
-                relationship_type=relationship_type, 
+                channel=channel,
+                user_ids=user_ids,
+                relationship_type=relationship_type,
                 role_types=role_types,
             )
         except Exception as e:
             raise e
-        
+
     def get_relationships(self, info, **kwargs):
         return get_relationships(info, **kwargs)
